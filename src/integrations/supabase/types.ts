@@ -14,16 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bag_reviews: {
+        Row: {
+          bag_id: string
+          collector_id: string
+          id: string
+          notes: string | null
+          points_awarded: number | null
+          reviewed_at: string | null
+          status: string
+        }
+        Insert: {
+          bag_id: string
+          collector_id: string
+          id?: string
+          notes?: string | null
+          points_awarded?: number | null
+          reviewed_at?: string | null
+          status: string
+        }
+        Update: {
+          bag_id?: string
+          collector_id?: string
+          id?: string
+          notes?: string | null
+          points_awarded?: number | null
+          reviewed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bag_reviews_bag_id_fkey"
+            columns: ["bag_id"]
+            isOneToOne: false
+            referencedRelation: "bags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bags: {
+        Row: {
+          activated_at: string | null
+          household_id: string
+          id: string
+          qr_code: string
+          status: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          household_id: string
+          id?: string
+          qr_code: string
+          status?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          household_id?: string
+          id?: string
+          qr_code?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          location: string | null
+          name: string
+          phone: string | null
+          total_points: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          location?: string | null
+          name: string
+          phone?: string | null
+          total_points?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          phone?: string | null
+          total_points?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "household" | "collector"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +262,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["household", "collector"],
+    },
   },
 } as const
