@@ -1,23 +1,28 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Recycle, Scan, History, Gift, TrendingUp, Users, QrCode, BarChart3, ChevronLeft } from 'lucide-react';
+import { Recycle, Scan, History, Gift, TrendingUp, Users, QrCode, BarChart3, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ScanButton } from '@/components/ScanButton';
 
 export default function HomePage() {
-  const { profile, role } = useAuth();
+  const { profile, role, signOut } = useAuth();
   const navigate = useNavigate();
   const isCollector = role === 'collector';
   const isAdmin = role === 'admin';
   const isHousehold = role === 'household';
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
       <header className="p-4 bg-card border-b border-border">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate('/auth')}>
-            <ChevronLeft className="w-5 h-5" />
+          <Button variant="outline" size="icon" onClick={handleLogout} title="Logout">
+            <LogOut className="w-5 h-5" />
           </Button>
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
             <Recycle className="w-5 h-5 text-primary-foreground" />
