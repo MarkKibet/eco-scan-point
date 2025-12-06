@@ -3,27 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield } from 'lucide-react';
+import { Recycle, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { supabase } from '@/integrations/supabase/client';
 
-type AuthStep = 'phone' | 'otp' | 'role' | 'details';
-type AppRole = 'household' | 'collector';
+type AuthStep = 'welcome' | 'phone' | 'otp' | 'details' | 'collector-auth';
+type AuthMode = 'signin' | 'signup';
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { signInWithPhone, user, isLoading } = useAuth();
+  const { signInWithPhone, signInCollector, signUpCollector, user, isLoading } = useAuth();
   
-  const [step, setStep] = useState<AuthStep>('phone');
+  const [step, setStep] = useState<AuthStep>('welcome');
+  const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
-  const [selectedRole, setSelectedRole] = useState<AppRole | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     if (user && !isLoading) {
@@ -38,19 +42,16 @@ export default function AuthPage() {
   const handleAdminLogin = async () => {
     setAdminLoading(true);
     
-    // Hardcoded admin credentials
     const adminPhone = '0717151928';
     const adminPassword = 'Eco@123';
-    const adminEmail = `${adminPhone}@ecosort.local`;
+    const adminEmail = `${adminPhone}@wastewise.local`;
 
-    // Try to sign in as admin
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: adminEmail,
       password: adminPassword
     });
 
     if (signInError) {
-      // If admin doesn't exist, create the account
       if (signInError.message.includes('Invalid login credentials')) {
         const { error: signUpError } = await supabase.auth.signUp({
           email: adminEmail,
@@ -86,11 +87,43 @@ export default function AuthPage() {
     navigate('/');
   };
 
-  const handlePhoneSubmit = (e: React.FormEvent) => {
+  const handleHouseholdSelect = () => {
+    setStep('phone');
+  };
+
+  const handleCollectorSelect = () => {
+    setStep('collector-auth');
+    setAuthMode('signin');
+  };
+
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length >= 10) {
-      setStep('otp');
-      toast.success('OTP sent! (Use any 6 digits for demo)');
+      setSubmitting(true);
+      
+      // Check if user exists by trying to sign in
+      const fakeEmail = `${phone}@wastewise.local`;
+      const fakePassword = `wastewise_${phone}_secure`;
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email: fakeEmail,
+        password: fakePassword
+      });
+
+      setSubmitting(false);
+
+      if (!error) {
+        // Existing user - logged in successfully
+        toast.success('Welcome back to WasteWise!');
+        navigate('/');
+      } else if (error.message.includes('Invalid login credentials')) {
+        // New user - proceed to OTP
+        setIsNewUser(true);
+        setStep('otp');
+        toast.success('OTP sent! (Use any 6 digits for demo)');
+      } else {
+        toast.error('Something went wrong. Please try again.');
+      }
     } else {
       toast.error('Please enter a valid phone number');
     }
@@ -99,15 +132,10 @@ export default function AuthPage() {
   const handleOtpSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp.length === 6) {
-      setStep('role');
+      setStep('details');
     } else {
       toast.error('Please enter the 6-digit code');
     }
-  };
-
-  const handleRoleSelect = (role: AppRole) => {
-    setSelectedRole(role);
-    setStep('details');
   };
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
@@ -117,25 +145,84 @@ export default function AuthPage() {
       toast.error('Please enter your name');
       return;
     }
-    
-    if (!selectedRole) {
-      toast.error('Please select a role');
-      return;
-    }
 
     setSubmitting(true);
     const { error } = await signInWithPhone(phone, {
       name: name.trim(),
       location: location.trim() || undefined,
-      role: selectedRole
+      role: 'household'
     });
     setSubmitting(false);
 
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Welcome to EcoSort!');
+      toast.success('Welcome to WasteWise!');
       navigate('/');
+    }
+  };
+
+  const validateCollectorEmail = (email: string) => {
+    return email.toLowerCase().endsWith('@wastewise.com');
+  };
+
+  const handleCollectorAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email.trim() || !password.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (!validateCollectorEmail(email)) {
+      toast.error('Collectors must use a @wastewise.com email');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setSubmitting(true);
+
+    if (authMode === 'signin') {
+      const { error } = await signInCollector(email, password);
+      setSubmitting(false);
+
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Invalid email or password');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.success('Welcome back to WasteWise!');
+        navigate('/');
+      }
+    } else {
+      if (!name.trim()) {
+        toast.error('Please enter your name');
+        setSubmitting(false);
+        return;
+      }
+
+      const { error } = await signUpCollector(email, password, {
+        name: name.trim(),
+        location: location.trim() || undefined
+      });
+      setSubmitting(false);
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast.error('This email is already registered');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.success('Account created! Welcome to WasteWise!');
+        navigate('/');
+      }
     }
   };
 
@@ -185,26 +272,73 @@ export default function AuthPage() {
           onClick={handleLogoClick}
           className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg animate-float hover:opacity-80 transition-opacity"
         >
-          <Leaf className="w-8 h-8 text-primary-foreground" />
+          <Recycle className="w-8 h-8 text-primary-foreground" />
         </button>
       </div>
 
       {/* Title */}
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-foreground mb-1">EcoSort</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-1">WasteWise</h1>
         <p className="text-muted-foreground text-sm">
+          {step === 'welcome' && 'Smart waste management for everyone'}
           {step === 'phone' && 'Enter your phone number to continue'}
           {step === 'otp' && 'Verify your phone number'}
-          {step === 'role' && 'Select your account type'}
           {step === 'details' && 'Complete your profile'}
+          {step === 'collector-auth' && (authMode === 'signin' ? 'Sign in to your account' : 'Create your account')}
         </p>
       </div>
 
       {/* Form Card */}
       <Card className="flex-1 max-w-md mx-auto w-full">
         <CardContent className="p-5">
+          {step === 'welcome' && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-center">I am a...</h2>
+              
+              <button
+                onClick={handleHouseholdSelect}
+                className="w-full p-4 rounded-xl border-2 border-input hover:border-primary transition-colors flex items-center gap-4"
+              >
+                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                  <Home className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-foreground">Household</p>
+                  <p className="text-sm text-muted-foreground">Activate bags & earn points</p>
+                </div>
+              </button>
+
+              <button
+                onClick={handleCollectorSelect}
+                className="w-full p-4 rounded-xl border-2 border-input hover:border-primary transition-colors flex items-center gap-4"
+              >
+                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                  <Truck className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-foreground">Garbage Collector</p>
+                  <p className="text-sm text-muted-foreground">WasteWise employee</p>
+                </div>
+              </button>
+            </div>
+          )}
+
           {step === 'phone' && (
             <form onSubmit={handlePhoneSubmit} className="space-y-4">
+              <button
+                type="button"
+                onClick={() => setStep('welcome')}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+
+              <div className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg mb-2">
+                <Home className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">Household</span>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Phone Number</label>
                 <div className="relative">
@@ -220,9 +354,9 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              <Button type="submit" size="lg" className="w-full">
-                Send OTP
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+                {submitting ? 'Checking...' : 'Continue'}
+                {!submitting && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </form>
           )}
@@ -269,8 +403,8 @@ export default function AuthPage() {
             </form>
           )}
 
-          {step === 'role' && (
-            <div className="space-y-4">
+          {step === 'details' && (
+            <form onSubmit={handleDetailsSubmit} className="space-y-4">
               <button
                 type="button"
                 onClick={() => setStep('otp')}
@@ -280,51 +414,9 @@ export default function AuthPage() {
                 Back
               </button>
 
-              <h2 className="text-lg font-semibold text-center">I am a...</h2>
-              
-              <button
-                onClick={() => handleRoleSelect('household')}
-                className="w-full p-4 rounded-xl border-2 border-input hover:border-primary transition-colors flex items-center gap-4"
-              >
-                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
-                  <Home className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-foreground">Household</p>
-                  <p className="text-sm text-muted-foreground">Activate bags & earn points</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleRoleSelect('collector')}
-                className="w-full p-4 rounded-xl border-2 border-input hover:border-primary transition-colors flex items-center gap-4"
-              >
-                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
-                  <Truck className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-foreground">Garbage Collector</p>
-                  <p className="text-sm text-muted-foreground">Review & approve bags</p>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {step === 'details' && (
-            <form onSubmit={handleDetailsSubmit} className="space-y-4">
-              <button
-                type="button"
-                onClick={() => setStep('role')}
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </button>
-
               <div className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg mb-2">
-                {selectedRole === 'household' && <Home className="w-4 h-4 text-primary" />}
-                {selectedRole === 'collector' && <Truck className="w-4 h-4 text-primary" />}
-                <span className="text-sm font-medium capitalize">{selectedRole}</span>
+                <Home className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">Household</span>
               </div>
 
               <div>
@@ -357,6 +449,122 @@ export default function AuthPage() {
 
               <Button type="submit" size="lg" className="w-full" disabled={submitting}>
                 {submitting ? 'Creating Account...' : 'Get Started'}
+                {!submitting && <ArrowRight className="w-4 h-4 ml-2" />}
+              </Button>
+            </form>
+          )}
+
+          {step === 'collector-auth' && (
+            <form onSubmit={handleCollectorAuth} className="space-y-4">
+              <button
+                type="button"
+                onClick={() => setStep('welcome')}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+
+              <div className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg mb-2">
+                <Truck className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">Garbage Collector</span>
+              </div>
+
+              <div className="flex gap-2 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signin')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    authMode === 'signin' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthMode('signup')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    authMode === 'signup' 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  Sign Up
+                </button>
+              </div>
+
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Your Name *</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your name"
+                      className="w-full h-11 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Work Email *</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@wastewise.com"
+                    className="w-full h-11 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Must end with @wastewise.com</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Password *</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    className="w-full h-11 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {authMode === 'signup' && (
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Location (optional)</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="City or area you cover"
+                      className="w-full h-11 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+                {submitting ? 'Please wait...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
                 {!submitting && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </form>

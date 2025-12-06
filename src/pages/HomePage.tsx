@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, Scan, History, Gift, TrendingUp, Users, QrCode } from 'lucide-react';
+import { Recycle, Scan, History, Gift, TrendingUp, Users, QrCode, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ScanButton } from '@/components/ScanButton';
 
@@ -16,7 +16,7 @@ export default function HomePage() {
       <header className="p-4 bg-card border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-            <Leaf className="w-5 h-5 text-primary-foreground" />
+            <Recycle className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">Hello, {profile?.name || 'User'}</h1>
@@ -46,12 +46,20 @@ export default function HomePage() {
           {/* Admin actions */}
           {isAdmin && (
             <>
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/admin')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
+                    <BarChart3 className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">Dashboard</p>
+                </CardContent>
+              </Card>
               <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/qr-generator')}>
                 <CardContent className="p-4 flex flex-col items-center text-center">
                   <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
                     <QrCode className="w-6 h-6 text-primary" />
                   </div>
-                  <p className="font-medium text-foreground text-sm">Generate QR Codes</p>
+                  <p className="font-medium text-foreground text-sm">Generate QR</p>
                 </CardContent>
               </Card>
               <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/reviews')}>

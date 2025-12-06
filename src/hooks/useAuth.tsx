@@ -20,6 +20,8 @@ interface AuthContextType {
   role: AppRole | null;
   isLoading: boolean;
   signInWithPhone: (phone: string, metadata: { name: string; location?: string; role: AppRole }) => Promise<{ error: Error | null }>;
+  signInCollector: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUpCollector: (email: string, password: string, metadata: { name: string; location?: string }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -82,8 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone: string,
     metadata: { name: string; location?: string; role: AppRole }
   ) => {
-    const fakeEmail = `${phone}@ecosort.local`;
-    const fakePassword = `ecosort_${phone}_secure`;
+    const fakeEmail = `${phone}@wastewise.local`;
+    const fakePassword = `wastewise_${phone}_secure`;
     const redirectUrl = `${window.location.origin}/`;
 
     // Try to sign in first (existing user)
@@ -121,6 +123,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: signInError as Error };
   };
 
+  // Collector sign in with email + password
+  const signInCollector = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      return { error: error as Error };
+    }
+
+    return { error: null };
+  };
+
+  // Collector sign up with email + password
+  const signUpCollector = async (
+    email: string,
+    password: string,
+    metadata: { name: string; location?: string }
+  ) => {
+    const redirectUrl = `${window.location.origin}/`;
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          ...metadata,
+          role: 'collector'
+        }
+      }
+    });
+
+    if (error) {
+      return { error: error as Error };
+    }
+
+    return { error: null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -138,6 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role,
         isLoading,
         signInWithPhone,
+        signInCollector,
+        signUpCollector,
         signOut
       }}
     >

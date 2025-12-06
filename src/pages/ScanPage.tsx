@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown, Upload, ChevronLeft } from 'lucide-react';
+import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown, Upload, ChevronLeft, Truck, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type ScanState = 'ready' | 'scanning' | 'success' | 'error' | 'duplicate' | 'review';
+type ScanState = 'ready' | 'scanning' | 'success' | 'error' | 'already-activated' | 'review';
 
 interface BagDetails {
   id: string;
@@ -42,6 +42,7 @@ export default function ScanPage() {
   const [disapprovalReason, setDisapprovalReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [scannedCode, setScannedCode] = useState('');
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerContainerId = 'qr-scanner-container';
@@ -129,8 +130,9 @@ export default function ScanPage() {
       .maybeSingle();
 
     if (existingBag) {
-      setScanState('duplicate');
-      toast.error('This bag has already been activated');
+      // Bag already activated - show special state
+      setScannedCode(code);
+      setScanState('already-activated');
       return;
     }
 
@@ -241,6 +243,11 @@ export default function ScanPage() {
     setReviewNotes('');
     setDisapprovalReason('');
     setCustomReason('');
+    setScannedCode('');
+  };
+
+  const goToCollectorLogin = () => {
+    navigate('/auth');
   };
 
   return (
@@ -366,6 +373,45 @@ export default function ScanPage() {
           </div>
         )}
 
+        {scanState === 'already-activated' && (
+          <div className="flex flex-col items-center gap-6 py-8 animate-scale-in">
+            <div className="w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-16 h-16 text-primary" />
+            </div>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground mb-2">Already Activated</h2>
+              <p className="text-muted-foreground mb-2">
+                This bag has already been activated by a household.
+              </p>
+              <p className="text-xs font-mono text-muted-foreground bg-muted px-3 py-1 rounded">
+                {scannedCode}
+              </p>
+            </div>
+            
+            <Card className="w-full max-w-xs">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">Are you a collector?</p>
+                    <p className="text-xs text-muted-foreground">Login to review this bag</p>
+                  </div>
+                </div>
+                <Button onClick={goToCollectorLogin} className="w-full">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Collector Login
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Button variant="outline" onClick={resetScan} className="w-full max-w-xs">
+              Scan Different Bag
+            </Button>
+          </div>
+        )}
+
         {scanState === 'review' && bagDetails && (
           <div className="space-y-4 py-4 animate-slide-up">
             <Card>
@@ -465,19 +511,15 @@ export default function ScanPage() {
           </div>
         )}
 
-        {(scanState === 'error' || scanState === 'duplicate') && (
+        {scanState === 'error' && (
           <div className="flex flex-col items-center gap-6 py-8 animate-scale-in">
             <div className="w-32 h-32 bg-destructive/10 rounded-full flex items-center justify-center">
               <AlertCircle className="w-16 h-16 text-destructive" />
             </div>
             <div className="text-center">
-              <h2 className="text-xl font-bold text-foreground mb-2">
-                {scanState === 'duplicate' ? 'Already Activated' : 'Scan Error'}
-              </h2>
+              <h2 className="text-xl font-bold text-foreground mb-2">Scan Error</h2>
               <p className="text-muted-foreground">
-                {scanState === 'duplicate'
-                  ? 'This bag has already been activated'
-                  : 'Could not process this QR code'}
+                Could not process this QR code
               </p>
             </div>
             <Button onClick={resetScan} className="w-full max-w-xs">
