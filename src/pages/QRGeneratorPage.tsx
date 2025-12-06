@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, Printer, Plus, Trash2, Download, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface QRCode {
   id: string;
@@ -14,7 +15,7 @@ interface QRCode {
 const generateUniqueCode = () => {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
-  return `ECO-${timestamp}-${random}`.toUpperCase();
+  return `WW-${timestamp}-${random}`.toUpperCase();
 };
 
 export default function QRGeneratorPage() {
@@ -62,6 +63,62 @@ export default function QRGeneratorPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const downloadSingleQR = (qr: QRCode) => {
+    const canvas = document.createElement('canvas');
+    const svg = document.getElementById(`qr-${qr.id}`) as unknown as SVGSVGElement;
+    
+    if (!svg) {
+      toast.error('Could not generate download');
+      return;
+    }
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = 300;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      
+      if (ctx) {
+        // White background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Title
+        ctx.fillStyle = '#22C55E';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('♻️ WasteWise', canvas.width / 2, 35);
+        
+        // QR Code
+        ctx.drawImage(img, 50, 60, 200, 200);
+        
+        // Code text
+        ctx.fillStyle = '#666';
+        ctx.font = '12px monospace';
+        ctx.fillText(qr.code, canvas.width / 2, 290);
+        
+        // Instructions
+        ctx.font = '11px Arial';
+        ctx.fillText('Scan to activate bag', canvas.width / 2, 320);
+        
+        // Download
+        const link = document.createElement('a');
+        link.download = `wastewise-${qr.code}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        toast.success('QR Code downloaded!');
+      }
+      
+      URL.revokeObjectURL(svgUrl);
+    };
+    img.src = svgUrl;
   };
 
   return (
@@ -139,23 +196,34 @@ export default function QRGeneratorPage() {
                 key={qr.id} 
                 className="relative group bg-card border border-border rounded-xl p-4 print:rounded-lg print:p-3 print:border-2 print:border-dashed print:border-muted-foreground"
               >
-                {/* Delete button - Hidden when printing */}
-                <button
-                  onClick={() => removeCode(qr.id)}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
+                {/* Action buttons - Hidden when printing */}
+                <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity print:hidden">
+                  <button
+                    onClick={() => downloadSingleQR(qr)}
+                    className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center"
+                    title="Download"
+                  >
+                    <Download className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => removeCode(qr.id)}
+                    className="w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
 
                 <div className="flex flex-col items-center">
                   {/* Logo */}
                   <div className="text-center mb-2 print:mb-1">
-                    <span className="text-lg font-bold text-primary print:text-sm">🌱 EcoSort</span>
+                    <span className="text-lg font-bold text-primary print:text-sm">♻️ WasteWise</span>
                   </div>
                   
                   {/* QR Code */}
                   <div className="bg-white p-2 rounded-lg">
                     <QRCodeSVG
+                      id={`qr-${qr.id}`}
                       value={qr.code}
                       size={120}
                       level="M"
