@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, Shield } from 'lucide-react';
+import { Leaf, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 type AuthStep = 'phone' | 'otp' | 'role' | 'details';
-type AppRole = 'household' | 'collector' | 'admin';
+type AppRole = 'household' | 'collector';
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -216,19 +216,6 @@ export default function AuthPage() {
                   <p className="text-sm text-muted-foreground">Review & approve bags</p>
                 </div>
               </button>
-
-              <button
-                onClick={() => handleRoleSelect('admin')}
-                className="w-full p-4 rounded-xl border-2 border-input hover:border-primary transition-colors flex items-center gap-4"
-              >
-                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-foreground">Administrator</p>
-                  <p className="text-sm text-muted-foreground">Manage QR codes & system</p>
-                </div>
-              </button>
             </div>
           )}
 
@@ -246,7 +233,6 @@ export default function AuthPage() {
               <div className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg mb-2">
                 {selectedRole === 'household' && <Home className="w-4 h-4 text-primary" />}
                 {selectedRole === 'collector' && <Truck className="w-4 h-4 text-primary" />}
-                {selectedRole === 'admin' && <Shield className="w-4 h-4 text-primary" />}
                 <span className="text-sm font-medium capitalize">{selectedRole}</span>
               </div>
 
