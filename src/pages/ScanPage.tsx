@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown, Upload, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
@@ -43,6 +43,7 @@ export default function ScanPage() {
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerContainerId = 'qr-scanner-container';
 
   const isCollector = role === 'collector';
@@ -87,6 +88,28 @@ export default function ScanPage() {
       console.error('Camera error:', error);
       toast.error('Camera access denied. Please enable camera permissions.');
       setScanState('ready');
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      if (!scannerRef.current) {
+        scannerRef.current = new Html5Qrcode(scannerContainerId + '-hidden');
+      }
+
+      const result = await scannerRef.current.scanFile(file, true);
+      handleScan(result);
+    } catch (error) {
+      console.error('QR scan error:', error);
+      toast.error('Could not read QR code from image. Please try another image.');
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -222,9 +245,12 @@ export default function ScanPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
+      {/* Hidden container for file scanning */}
+      <div id={scannerContainerId + '-hidden'} style={{ display: 'none' }} />
+      
       <header className="flex items-center justify-between p-4 bg-card border-b border-border">
         <Button variant="ghost" size="icon" onClick={() => { stopScanner(); navigate('/'); }}>
-          <X className="w-5 h-5" />
+          <ChevronLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-lg font-semibold">
           {isCollector ? 'Review Bag' : 'Activate Bag'}
@@ -249,10 +275,29 @@ export default function ScanPage() {
                 }
               </p>
             </div>
-            <Button onClick={startScanner} size="lg" className="w-full max-w-xs">
-              <Camera className="w-5 h-5 mr-2" />
-              Open Camera
-            </Button>
+            
+            <div className="flex gap-3 w-full max-w-xs">
+              <Button onClick={startScanner} size="lg" className="flex-1">
+                <Camera className="w-5 h-5 mr-2" />
+                Camera
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="flex-1"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-5 h-5 mr-2" />
+                Upload
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
 
             <div className="w-full max-w-xs">
               <div className="relative my-4">
