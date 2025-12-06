@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck } from 'lucide-react';
+import { Leaf, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { supabase } from '@/integrations/supabase/client';
 
 type AuthStep = 'phone' | 'otp' | 'role' | 'details';
 type AppRole = 'household' | 'collector';
@@ -21,12 +22,69 @@ export default function AuthPage() {
   const [location, setLocation] = useState('');
   const [selectedRole, setSelectedRole] = useState<AppRole | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminLoading, setAdminLoading] = useState(false);
 
   useEffect(() => {
     if (user && !isLoading) {
       navigate('/');
     }
   }, [user, isLoading, navigate]);
+
+  const handleLogoClick = () => {
+    setShowAdminLogin(true);
+  };
+
+  const handleAdminLogin = async () => {
+    setAdminLoading(true);
+    
+    // Hardcoded admin credentials
+    const adminPhone = '0717151928';
+    const adminPassword = 'Eco@123';
+    const adminEmail = `${adminPhone}@ecosort.local`;
+
+    // Try to sign in as admin
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: adminEmail,
+      password: adminPassword
+    });
+
+    if (signInError) {
+      // If admin doesn't exist, create the account
+      if (signInError.message.includes('Invalid login credentials')) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: adminEmail,
+          password: adminPassword,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              name: 'System Admin',
+              phone: adminPhone,
+              role: 'admin'
+            }
+          }
+        });
+
+        if (signUpError) {
+          toast.error('Admin login failed');
+          setAdminLoading(false);
+          return;
+        }
+
+        toast.success('Admin account created & logged in!');
+      } else {
+        toast.error('Admin login failed');
+        setAdminLoading(false);
+        return;
+      }
+    } else {
+      toast.success('Logged in as Admin!');
+    }
+
+    setAdminLoading(false);
+    setShowAdminLogin(false);
+    navigate('/');
+  };
 
   const handlePhoneSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,11 +149,44 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-4 py-8 animate-fade-in">
-      {/* Logo */}
-      <div className="flex items-center justify-center mb-6">
-        <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg animate-float">
-          <Leaf className="w-8 h-8 text-primary-foreground" />
+      {/* Admin Login Modal */}
+      {showAdminLogin && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-sm animate-scale-in">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold">Admin Access</h2>
+                </div>
+                <button onClick={() => setShowAdminLogin(false)}>
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                This will log you in as the system administrator.
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowAdminLogin(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={handleAdminLogin} disabled={adminLoading} className="flex-1">
+                  {adminLoading ? 'Logging in...' : 'Login as Admin'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      )}
+
+      {/* Logo - Clickable for Admin Access */}
+      <div className="flex items-center justify-center mb-6">
+        <button
+          onClick={handleLogoClick}
+          className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-lg animate-float hover:opacity-80 transition-opacity"
+        >
+          <Leaf className="w-8 h-8 text-primary-foreground" />
+        </button>
       </div>
 
       {/* Title */}
