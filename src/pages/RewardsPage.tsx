@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PointsBadge } from '@/components/PointsBadge';
-import { Gift, Check, X } from 'lucide-react';
+import { Gift, Check, X, ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 
 export default function RewardsPage() {
+  const navigate = useNavigate();
   const { user, rewards, redeemReward } = useApp();
   const [selectedReward, setSelectedReward] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -41,18 +43,21 @@ export default function RewardsPage() {
   const selected = rewards.find(r => r.id === selectedReward);
 
   return (
-    <div className="min-h-screen bg-background pb-24 pt-6 px-4 animate-fade-in">
+    <div className="min-h-screen bg-background pb-24 animate-fade-in">
       {/* Header */}
-      <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Rewards Store</h1>
-          <p className="text-muted-foreground">Redeem your eco-points</p>
+      <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <div className="flex-1">
+          <h1 className="text-xl font-bold text-foreground">Rewards Store</h1>
+          <p className="text-sm text-muted-foreground">Redeem your eco-points</p>
         </div>
         <PointsBadge points={user?.totalPoints || 0} size="lg" />
       </header>
 
       {/* Rewards Grid */}
-      <div className="grid gap-4">
+      <div className="p-4 grid gap-4">
         {rewards.map((reward) => {
           const canAfford = (user?.totalPoints || 0) >= reward.pointsCost;
           

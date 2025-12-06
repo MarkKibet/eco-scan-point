@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, XCircle, ClipboardList } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, XCircle, ClipboardList, ChevronLeft } from 'lucide-react';
 
 interface ReviewWithHousehold {
   id: string;
@@ -20,6 +22,7 @@ interface ReviewWithHousehold {
 }
 
 export default function CollectorReviewsPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [reviews, setReviews] = useState<ReviewWithHousehold[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,9 +78,14 @@ export default function CollectorReviewsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
-      <header className="p-4 bg-card border-b border-border">
-        <h1 className="text-xl font-bold text-foreground">My Reviews</h1>
-        <p className="text-sm text-muted-foreground">Bags you've reviewed</p>
+      <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">My Reviews</h1>
+          <p className="text-sm text-muted-foreground">Bags you've reviewed</p>
+        </div>
       </header>
 
       <div className="p-4 space-y-3">

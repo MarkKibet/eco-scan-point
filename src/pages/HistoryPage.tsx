@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, XCircle, Clock, Package } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, XCircle, Clock, Package, ChevronLeft } from 'lucide-react';
 
 interface BagWithReview {
   id: string;
@@ -19,6 +21,7 @@ interface BagWithReview {
 }
 
 export default function HistoryPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [bags, setBags] = useState<BagWithReview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,9 +104,14 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
-      <header className="p-4 bg-card border-b border-border">
-        <h1 className="text-xl font-bold text-foreground">Bag History</h1>
-        <p className="text-sm text-muted-foreground">Track your activated bags</p>
+      <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Bag History</h1>
+          <p className="text-sm text-muted-foreground">Track your activated bags</p>
+        </div>
       </header>
 
       <div className="p-4 space-y-3">
