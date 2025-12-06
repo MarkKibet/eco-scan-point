@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
-import { Leaf, Scan, History, Gift, TrendingUp, Users } from 'lucide-react';
+import { Leaf, Scan, History, Gift, TrendingUp, Users, QrCode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ScanButton } from '@/components/ScanButton';
 
@@ -66,6 +66,14 @@ export default function HomePage() {
                     <Gift className="w-6 h-6 text-primary" />
                   </div>
                   <p className="font-medium text-foreground text-sm">Rewards</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/qr-generator')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
+                    <QrCode className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">Print QR Codes</p>
                 </CardContent>
               </Card>
             </>

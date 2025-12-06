@@ -12,6 +12,7 @@ import HistoryPage from "@/pages/HistoryPage";
 import RewardsPage from "@/pages/RewardsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import CollectorReviewsPage from "@/pages/CollectorReviewsPage";
+import QRGeneratorPage from "@/pages/QRGeneratorPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,7 +38,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function ConditionalBottomNav() {
   const location = useLocation();
   const { user } = useAuth();
-  const showNav = user && location.pathname !== '/auth' && location.pathname !== '/scan';
+  const showNav = user && location.pathname !== '/auth' && location.pathname !== '/scan' && location.pathname !== '/qr-generator';
   
   if (!showNav) return null;
   return <BottomNav />;
@@ -54,6 +55,7 @@ function AppContent() {
         <Route path="/rewards" element={<ProtectedRoute><RewardsPage /></ProtectedRoute>} />
         <Route path="/reviews" element={<ProtectedRoute><CollectorReviewsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/qr-generator" element={<ProtectedRoute><QRGeneratorPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <ConditionalBottomNav />
