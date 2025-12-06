@@ -19,8 +19,7 @@ interface AuthContextType {
   profile: Profile | null;
   role: AppRole | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, metadata: { name: string; phone?: string; location?: string; role: AppRole }) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithPhone: (phone: string, metadata: { name: string; location?: string; role: AppRole }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -48,7 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -66,7 +64,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -80,32 +77,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (
-    email: string,
-    password: string,
-    metadata: { name: string; phone?: string; location?: string; role: AppRole }
+  // Mock phone auth - uses email under the hood with phone as identifier
+  const signInWithPhone = async (
+    phone: string,
+    metadata: { name: string; location?: string; role: AppRole }
   ) => {
+    const fakeEmail = `${phone}@ecosort.local`;
+    const fakePassword = `ecosort_${phone}_secure`;
     const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: metadata
+
+    // Try to sign in first (existing user)
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: fakeEmail,
+      password: fakePassword
+    });
+
+    if (!signInError) {
+      // Existing user signed in successfully
+      return { error: null };
+    }
+
+    // If sign in failed, try to create new account
+    if (signInError.message.includes('Invalid login credentials')) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: fakeEmail,
+        password: fakePassword,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            ...metadata,
+            phone
+          }
+        }
+      });
+
+      if (signUpError) {
+        return { error: signUpError as Error };
       }
-    });
 
-    return { error: error as Error | null };
-  };
+      return { error: null };
+    }
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    return { error: error as Error | null };
+    return { error: signInError as Error };
   };
 
   const signOut = async () => {
@@ -124,8 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         role,
         isLoading,
-        signUp,
-        signIn,
+        signInWithPhone,
         signOut
       }}
     >
