@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, Printer, Plus, Trash2, Download } from 'lucide-react';
+import { ChevronLeft, Printer, Plus, Trash2, Download, ShieldAlert } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface QRCode {
   id: string;
@@ -18,8 +19,27 @@ const generateUniqueCode = () => {
 
 export default function QRGeneratorPage() {
   const navigate = useNavigate();
+  const { role } = useAuth();
   const [qrCodes, setQrCodes] = useState<QRCode[]>([]);
   const [quantity, setQuantity] = useState(6);
+
+  const isAdmin = role === 'admin';
+
+  // Restrict access to admin only
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+        <div className="w-20 h-20 bg-destructive/10 rounded-2xl flex items-center justify-center mb-4">
+          <ShieldAlert className="w-10 h-10 text-destructive" />
+        </div>
+        <h1 className="text-xl font-bold text-foreground mb-2">Access Restricted</h1>
+        <p className="text-muted-foreground text-center mb-6">
+          Only administrators can generate QR codes
+        </p>
+        <Button onClick={() => navigate('/')}>Go Back Home</Button>
+      </div>
+    );
+  }
 
   const generateCodes = () => {
     const newCodes: QRCode[] = [];

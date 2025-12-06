@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           bag_id: string
           collector_id: string
+          disapproval_reason: string | null
           id: string
           notes: string | null
           points_awarded: number | null
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           bag_id: string
           collector_id: string
+          disapproval_reason?: string | null
           id?: string
           notes?: string | null
           points_awarded?: number | null
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           bag_id?: string
           collector_id?: string
+          disapproval_reason?: string | null
           id?: string
           notes?: string | null
           points_awarded?: number | null
