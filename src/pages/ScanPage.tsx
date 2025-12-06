@@ -256,7 +256,7 @@ export default function ScanPage() {
       <div id={scannerContainerId + '-hidden'} style={{ display: 'none' }} />
       
       <header className="flex items-center justify-between p-4 bg-card border-b border-border">
-        <Button variant="ghost" size="icon" onClick={() => { stopScanner(); navigate('/'); }}>
+        <Button variant="outline" size="icon" onClick={() => { stopScanner(); navigate('/auth'); }}>
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-lg font-semibold">
