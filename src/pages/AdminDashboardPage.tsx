@@ -418,6 +418,7 @@ export default function AdminDashboardPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead>Phone</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Points</TableHead>
                         <TableHead>Joined</TableHead>
@@ -426,7 +427,8 @@ export default function AdminDashboardPage() {
                     <TableBody>
                       {users.filter(u => u.role === 'household').map(user => (
                         <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.name}</TableCell>
+                          <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
+                          <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>
                           <TableCell>{user.total_points}</TableCell>
                           <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
@@ -457,6 +459,7 @@ export default function AdminDashboardPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead>Phone</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Joined</TableHead>
                       </TableRow>
@@ -464,7 +467,8 @@ export default function AdminDashboardPage() {
                     <TableBody>
                       {users.filter(u => u.role === 'collector').map(user => (
                         <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.name}</TableCell>
+                          <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
+                          <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>
                           <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                         </TableRow>
