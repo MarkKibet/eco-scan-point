@@ -23,6 +23,15 @@ interface BagDetails {
   };
 }
 
+const DISAPPROVAL_REASONS = [
+  'Contaminated with non-recyclables',
+  'Wrong waste type in bag',
+  'Bag not properly sealed',
+  'Mixed recyclables and general waste',
+  'Hazardous materials found',
+  'Other'
+];
+
 export default function ScanPage() {
   const navigate = useNavigate();
   const { role, user } = useAuth();
@@ -30,6 +39,8 @@ export default function ScanPage() {
   const [manualCode, setManualCode] = useState('');
   const [bagDetails, setBagDetails] = useState<BagDetails | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
+  const [disapprovalReason, setDisapprovalReason] = useState('');
+  const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerContainerId = 'qr-scanner-container';
@@ -126,7 +137,7 @@ export default function ScanPage() {
 
     if (error || !bag) {
       setScanState('error');
-      toast.error('Bag not found. Has it been activated?');
+      toast.error('Bag not found. Has it been activated by a household?');
       return;
     }
 
@@ -167,8 +178,15 @@ export default function ScanPage() {
   const handleReview = async (approved: boolean) => {
     if (!bagDetails || !user) return;
     
+    // Validate disapproval reason
+    if (!approved && !disapprovalReason) {
+      toast.error('Please select a reason for disapproval');
+      return;
+    }
+
     setSubmitting(true);
     const pointsAwarded = approved ? 15 : 0;
+    const finalReason = disapprovalReason === 'Other' ? customReason : disapprovalReason;
 
     const { error } = await supabase
       .from('bag_reviews')
@@ -177,7 +195,8 @@ export default function ScanPage() {
         collector_id: user.id,
         status: approved ? 'approved' : 'disapproved',
         points_awarded: pointsAwarded,
-        notes: reviewNotes || null
+        notes: reviewNotes || null,
+        disapproval_reason: approved ? null : finalReason
       });
 
     setSubmitting(false);
@@ -186,7 +205,7 @@ export default function ScanPage() {
       console.error('Error submitting review:', error);
       toast.error('Failed to submit review');
     } else {
-      toast.success(approved ? 'Bag approved! Points awarded.' : 'Bag marked as not meeting threshold.');
+      toast.success(approved ? 'Bag approved! Points awarded to household.' : 'Bag disapproved. Household notified.');
       resetScan();
     }
   };
@@ -197,6 +216,8 @@ export default function ScanPage() {
     setBagDetails(null);
     setManualCode('');
     setReviewNotes('');
+    setDisapprovalReason('');
+    setCustomReason('');
   };
 
   return (
@@ -350,11 +371,38 @@ export default function ScanPage() {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Disapproval Reason (if applicable)</label>
+              <select
+                value={disapprovalReason}
+                onChange={(e) => setDisapprovalReason(e.target.value)}
+                className="w-full h-11 px-3 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select a reason...</option>
+                {DISAPPROVAL_REASONS.map((reason) => (
+                  <option key={reason} value={reason}>{reason}</option>
+                ))}
+              </select>
+            </div>
+
+            {disapprovalReason === 'Other' && (
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Specify reason</label>
+                <input
+                  type="text"
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  placeholder="Enter custom reason..."
+                  className="w-full h-11 px-3 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            )}
+
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
                 onClick={() => handleReview(false)}
-                disabled={submitting}
+                disabled={submitting || (!disapprovalReason || (disapprovalReason === 'Other' && !customReason))}
                 className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
               >
                 <ThumbsDown className="w-4 h-4 mr-2" />

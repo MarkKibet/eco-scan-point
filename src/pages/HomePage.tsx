@@ -8,6 +8,8 @@ export default function HomePage() {
   const { profile, role } = useAuth();
   const navigate = useNavigate();
   const isCollector = role === 'collector';
+  const isAdmin = role === 'admin';
+  const isHousehold = role === 'household';
 
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
@@ -24,7 +26,7 @@ export default function HomePage() {
       </header>
 
       <div className="p-4 space-y-4">
-        {!isCollector && (
+        {isHousehold && (
           <Card className="bg-gradient-to-br from-primary to-primary/80">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
@@ -41,17 +43,61 @@ export default function HomePage() {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/scan')}>
-            <CardContent className="p-4 flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
-                <Scan className="w-6 h-6 text-primary" />
-              </div>
-              <p className="font-medium text-foreground text-sm">{isCollector ? 'Review Bag' : 'Activate Bag'}</p>
-            </CardContent>
-          </Card>
-
-          {!isCollector ? (
+          {/* Admin actions */}
+          {isAdmin && (
             <>
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/qr-generator')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
+                    <QrCode className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">Generate QR Codes</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/reviews')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">View Reviews</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Collector actions */}
+          {isCollector && (
+            <>
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/scan')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
+                    <Scan className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">Review Bag</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/reviews')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">My Reviews</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Household actions */}
+          {isHousehold && (
+            <>
+              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/scan')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
+                    <Scan className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">Activate Bag</p>
+                </CardContent>
+              </Card>
               <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/history')}>
                 <CardContent className="p-4 flex flex-col items-center text-center">
                   <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
@@ -68,28 +114,11 @@ export default function HomePage() {
                   <p className="font-medium text-foreground text-sm">Rewards</p>
                 </CardContent>
               </Card>
-              <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/qr-generator')}>
-                <CardContent className="p-4 flex flex-col items-center text-center">
-                  <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
-                    <QrCode className="w-6 h-6 text-primary" />
-                  </div>
-                  <p className="font-medium text-foreground text-sm">Print QR Codes</p>
-                </CardContent>
-              </Card>
             </>
-          ) : (
-            <Card className="cursor-pointer hover:border-primary transition-colors" onClick={() => navigate('/reviews')}>
-              <CardContent className="p-4 flex flex-col items-center text-center">
-                <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center mb-2">
-                  <Users className="w-6 h-6 text-primary" />
-                </div>
-                <p className="font-medium text-foreground text-sm">My Reviews</p>
-              </CardContent>
-            </Card>
           )}
         </div>
       </div>
-      <ScanButton />
+      {(isHousehold || isCollector) && <ScanButton />}
     </div>
   );
 }

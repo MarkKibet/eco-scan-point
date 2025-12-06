@@ -13,6 +13,7 @@ interface BagWithReview {
     status: string;
     points_awarded: number;
     notes: string | null;
+    disapproval_reason: string | null;
     reviewed_at: string;
   };
 }
@@ -126,7 +127,12 @@ export default function HistoryPage() {
                     </p>
                     {bag.review?.notes && (
                       <p className="text-xs text-muted-foreground mt-2 italic">
-                        "{bag.review.notes}"
+                        Note: "{bag.review.notes}"
+                      </p>
+                    )}
+                    {bag.review?.disapproval_reason && (
+                      <p className="text-xs text-destructive mt-2">
+                        Reason: {bag.review.disapproval_reason}
                       </p>
                     )}
                   </div>
