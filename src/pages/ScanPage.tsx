@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown, Upload, ChevronLeft, Truck, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,8 +32,23 @@ const DISAPPROVAL_REASONS = [
   'Other'
 ];
 
+// Extract bag code from URL or scanned text (handles both direct codes and URLs)
+const extractBagCode = (input: string): string => {
+  // Check if it's a URL with a code parameter
+  try {
+    const url = new URL(input);
+    const codeParam = url.searchParams.get('code');
+    if (codeParam) return codeParam;
+  } catch {
+    // Not a URL, continue
+  }
+  // Return as-is if it's already just a code
+  return input;
+};
+
 export default function ScanPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { role, user } = useAuth();
   const [scanState, setScanState] = useState<ScanState>('ready');
   const [manualCode, setManualCode] = useState('');
@@ -46,6 +61,7 @@ export default function ScanPage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerContainerId = 'qr-scanner-container';
+  const processedUrlCode = useRef(false);
 
   const isCollector = role === 'collector';
 
@@ -120,6 +136,15 @@ export default function ScanPage() {
     };
   }, [stopScanner]);
 
+  // Handle code from URL parameter (when opened via external QR scanner)
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code');
+    if (codeFromUrl && user && !processedUrlCode.current) {
+      processedUrlCode.current = true;
+      handleScan(codeFromUrl);
+    }
+  }, [searchParams, user]);
+
   const handleHouseholdScan = async (code: string) => {
     if (!user) return;
 
@@ -185,7 +210,10 @@ export default function ScanPage() {
     setScanState('review');
   };
 
-  const handleScan = async (code: string) => {
+  const handleScan = async (input: string) => {
+    // Extract the bag code from URL or use as-is
+    const code = extractBagCode(input);
+    
     if (isCollector) {
       await handleCollectorScan(code);
     } else {

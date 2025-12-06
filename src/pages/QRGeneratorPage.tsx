@@ -18,6 +18,15 @@ const generateUniqueCode = () => {
   return `WW-${timestamp}-${random}`.toUpperCase();
 };
 
+// Get the app base URL for QR codes
+const getAppUrl = () => {
+  return window.location.origin;
+};
+
+const generateQRUrl = (code: string) => {
+  return `${getAppUrl()}/scan?code=${encodeURIComponent(code)}`;
+};
+
 export default function QRGeneratorPage() {
   const navigate = useNavigate();
   const { role } = useAuth();
@@ -224,7 +233,7 @@ export default function QRGeneratorPage() {
                   <div className="bg-white p-2 rounded-lg">
                     <QRCodeSVG
                       id={`qr-${qr.id}`}
-                      value={qr.code}
+                      value={generateQRUrl(qr.code)}
                       size={120}
                       level="M"
                       className="print:w-24 print:h-24"
