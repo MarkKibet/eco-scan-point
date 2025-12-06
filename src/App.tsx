@@ -34,10 +34,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function AppRoutes() {
+function ConditionalBottomNav() {
   const location = useLocation();
-  const showNav = location.pathname !== '/auth' && location.pathname !== '/scan';
+  const { user } = useAuth();
+  const showNav = user && location.pathname !== '/auth' && location.pathname !== '/scan';
+  
+  if (!showNav) return null;
+  return <BottomNav />;
+}
 
+function AppContent() {
   return (
     <>
       <Routes>
@@ -50,22 +56,22 @@ function AppRoutes() {
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {showNav && <BottomNav />}
+      <ConditionalBottomNav />
     </>
   );
 }
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AppContent />
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
