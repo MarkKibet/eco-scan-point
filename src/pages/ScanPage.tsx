@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,42 +31,63 @@ export default function ScanPage() {
   const [bagDetails, setBagDetails] = useState<BagDetails | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerId = 'qr-scanner-container';
 
   const isCollector = role === 'collector';
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState();
+        if (state === 2) { // SCANNING state
+          await scannerRef.current.stop();
+        }
+      } catch (error) {
+        console.log('Scanner stop error:', error);
       }
-      setScanState('scanning');
-    } catch (error) {
-      console.error('Camera access denied:', error);
-      toast.error('Camera access denied. Please enable camera permissions.');
     }
-  };
+  }, []);
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+  const startScanner = async () => {
+    setScanState('scanning');
+    
+    // Wait for DOM to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
+      if (!scannerRef.current) {
+        scannerRef.current = new Html5Qrcode(scannerContainerId);
+      }
+
+      await scannerRef.current.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+        },
+        async (decodedText) => {
+          await stopScanner();
+          handleScan(decodedText);
+        },
+        () => {} // Ignore errors during scanning
+      );
+    } catch (error) {
+      console.error('Camera error:', error);
+      toast.error('Camera access denied. Please enable camera permissions.');
+      setScanState('ready');
     }
   };
 
   useEffect(() => {
-    return () => stopCamera();
-  }, []);
+    return () => {
+      stopScanner();
+    };
+  }, [stopScanner]);
 
   const handleHouseholdScan = async (code: string) => {
     if (!user) return;
 
-    // Check if bag already exists
     const { data: existingBag } = await supabase
       .from('bags')
       .select('*')
@@ -78,7 +100,6 @@ export default function ScanPage() {
       return;
     }
 
-    // Activate new bag
     const { error } = await supabase
       .from('bags')
       .insert({
@@ -97,7 +118,6 @@ export default function ScanPage() {
   };
 
   const handleCollectorScan = async (code: string) => {
-    // Look up the bag and household info
     const { data: bag, error } = await supabase
       .from('bags')
       .select('*')
@@ -116,7 +136,6 @@ export default function ScanPage() {
       return;
     }
 
-    // Fetch household profile
     const { data: householdProfile } = await supabase
       .from('profiles')
       .select('name, location, total_points')
@@ -128,12 +147,9 @@ export default function ScanPage() {
       household: householdProfile || undefined
     });
     setScanState('review');
-    stopCamera();
   };
 
   const handleScan = async (code: string) => {
-    stopCamera();
-    
     if (isCollector) {
       await handleCollectorScan(code);
     } else {
@@ -175,23 +191,18 @@ export default function ScanPage() {
     }
   };
 
-  const resetScan = () => {
+  const resetScan = async () => {
+    await stopScanner();
     setScanState('ready');
     setBagDetails(null);
     setManualCode('');
     setReviewNotes('');
   };
 
-  const simulateScan = () => {
-    const randomCode = 'ECO-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-    handleScan(randomCode);
-  };
-
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
-      {/* Header */}
       <header className="flex items-center justify-between p-4 bg-card border-b border-border">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+        <Button variant="ghost" size="icon" onClick={() => { stopScanner(); navigate('/'); }}>
           <X className="w-5 h-5" />
         </Button>
         <h1 className="text-lg font-semibold">
@@ -217,7 +228,7 @@ export default function ScanPage() {
                 }
               </p>
             </div>
-            <Button onClick={startCamera} size="lg" className="w-full max-w-xs">
+            <Button onClick={startScanner} size="lg" className="w-full max-w-xs">
               <Camera className="w-5 h-5 mr-2" />
               Open Camera
             </Button>
@@ -247,42 +258,21 @@ export default function ScanPage() {
                 </Button>
               </form>
             </div>
-
-            <Button variant="outline" onClick={simulateScan} className="w-full max-w-xs">
-              Demo Scan (Test)
-            </Button>
           </div>
         )}
 
         {scanState === 'scanning' && (
-          <div className="relative animate-scale-in">
-            <div className="aspect-square max-w-sm mx-auto rounded-3xl overflow-hidden bg-foreground/10 relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-64 h-64 border-4 border-primary rounded-3xl relative">
-                  <div className="absolute inset-0 bg-primary/5" />
-                  <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-2xl" />
-                  <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-2xl" />
-                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-2xl" />
-                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-2xl" />
-                  <div className="absolute left-4 right-4 h-0.5 bg-primary animate-scan-line" />
-                </div>
-              </div>
-            </div>
+          <div className="animate-scale-in">
+            <div 
+              id={scannerContainerId}
+              className="w-full max-w-sm mx-auto aspect-square rounded-3xl overflow-hidden bg-foreground/10"
+            />
             <p className="text-center text-muted-foreground mt-4">
-              Align QR code within the frame
+              Point camera at QR code
             </p>
-            <div className="flex gap-3 mt-6 justify-center">
-              <Button variant="outline" onClick={() => { stopCamera(); resetScan(); }}>
+            <div className="flex justify-center mt-4">
+              <Button variant="outline" onClick={resetScan}>
                 Cancel
-              </Button>
-              <Button onClick={simulateScan}>
-                Simulate Scan
               </Button>
             </div>
           </div>
