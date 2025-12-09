@@ -3,22 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, Printer, Plus, Trash2, Download, ShieldAlert } from 'lucide-react';
+import { ChevronLeft, Printer, Plus, Trash2, Download, ShieldAlert, Leaf } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { BagTypeSelector } from '@/components/RecyclingGuide';
 
 interface QRCode {
   id: string;
   code: string;
+  bagType: 'recyclable' | 'organic';
+  points: number;
 }
 
-const generateUniqueCode = () => {
+const generateUniqueCode = (bagType: 'recyclable' | 'organic') => {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
-  return `WW-${timestamp}-${random}`.toUpperCase();
+  const prefix = bagType === 'recyclable' ? 'WWR' : 'WWO';
+  return `${prefix}-${timestamp}-${random}`.toUpperCase();
 };
 
-// Get the app base URL for QR codes
 const getAppUrl = () => {
   return window.location.origin;
 };
@@ -32,10 +35,10 @@ export default function QRGeneratorPage() {
   const { role } = useAuth();
   const [qrCodes, setQrCodes] = useState<QRCode[]>([]);
   const [quantity, setQuantity] = useState(6);
+  const [selectedBagType, setSelectedBagType] = useState<'recyclable' | 'organic'>('recyclable');
 
   const isAdmin = role === 'admin';
 
-  // Restrict access to admin only
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -52,14 +55,18 @@ export default function QRGeneratorPage() {
   }
 
   const generateCodes = () => {
+    const points = selectedBagType === 'recyclable' ? 15 : 5;
     const newCodes: QRCode[] = [];
     for (let i = 0; i < quantity; i++) {
       newCodes.push({
         id: crypto.randomUUID(),
-        code: generateUniqueCode()
+        code: generateUniqueCode(selectedBagType),
+        bagType: selectedBagType,
+        points
       });
     }
     setQrCodes(prev => [...prev, ...newCodes]);
+    toast.success(`Generated ${quantity} ${selectedBagType === 'recyclable' ? 'Green' : 'Black'} bag codes`);
   };
 
   const removeCode = (id: string) => {
@@ -90,35 +97,41 @@ export default function QRGeneratorPage() {
     const img = new Image();
     img.onload = () => {
       canvas.width = 300;
-      canvas.height = 400;
+      canvas.height = 420;
       const ctx = canvas.getContext('2d');
       
       if (ctx) {
-        // White background
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Title
-        ctx.fillStyle = '#22C55E';
-        ctx.font = 'bold 24px Arial';
+        const bagColor = qr.bagType === 'recyclable' ? '#22C55E' : '#D97706';
+        const bagLabel = qr.bagType === 'recyclable' ? '♻️ RECYCLABLES' : '🗑️ ORGANICS';
+        const bagPoints = qr.bagType === 'recyclable' ? '15 Points' : '5 Points';
+        
+        ctx.fillStyle = bagColor;
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('♻️ WasteWise', canvas.width / 2, 35);
+        ctx.fillText('WasteWise', canvas.width / 2, 30);
         
-        // QR Code
-        ctx.drawImage(img, 50, 60, 200, 200);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(bagLabel, canvas.width / 2, 52);
         
-        // Code text
+        ctx.drawImage(img, 50, 70, 200, 200);
+        
         ctx.fillStyle = '#666';
-        ctx.font = '12px monospace';
-        ctx.fillText(qr.code, canvas.width / 2, 290);
+        ctx.font = '11px monospace';
+        ctx.fillText(qr.code, canvas.width / 2, 295);
         
-        // Instructions
-        ctx.font = '11px Arial';
-        ctx.fillText('Scan to activate bag', canvas.width / 2, 320);
+        ctx.fillStyle = bagColor;
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(bagPoints, canvas.width / 2, 320);
         
-        // Download
+        ctx.fillStyle = '#888';
+        ctx.font = '10px Arial';
+        ctx.fillText('Scan to activate bag', canvas.width / 2, 345);
+        
         const link = document.createElement('a');
-        link.download = `wastewise-${qr.code}.png`;
+        link.download = `wastewise-${qr.bagType}-${qr.code}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
         
@@ -130,12 +143,14 @@ export default function QRGeneratorPage() {
     img.src = svgUrl;
   };
 
+  const recyclableCodes = qrCodes.filter(qr => qr.bagType === 'recyclable');
+  const organicCodes = qrCodes.filter(qr => qr.bagType === 'organic');
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - Hidden when printing */}
       <header className="p-4 bg-card border-b border-border print:hidden">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate('/auth')}>
+          <Button variant="outline" size="icon" onClick={() => navigate('/')}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
@@ -145,11 +160,15 @@ export default function QRGeneratorPage() {
         </div>
       </header>
 
-      {/* Controls - Hidden when printing */}
       <div className="p-4 space-y-4 print:hidden">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-4">
+          <CardContent className="p-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">Select Bag Type:</label>
+              <BagTypeSelector value={selectedBagType} onChange={setSelectedBagType} />
+            </div>
+            
+            <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-foreground">Quantity:</label>
               <select
                 value={quantity}
@@ -185,27 +204,36 @@ export default function QRGeneratorPage() {
           </CardContent>
         </Card>
 
+        {qrCodes.length > 0 && (
+          <div className="flex gap-4 text-sm">
+            <span className="text-primary font-medium">🟢 Recyclables: {recyclableCodes.length}</span>
+            <span className="text-amber-600 font-medium">⚫ Organics: {organicCodes.length}</span>
+          </div>
+        )}
+
         {qrCodes.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Download className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-1">No QR Codes Yet</h3>
-            <p className="text-muted-foreground text-sm">Generate codes to create printable stickers</p>
+            <p className="text-muted-foreground text-sm">Select bag type and generate codes to create printable stickers</p>
           </div>
         )}
       </div>
 
-      {/* QR Code Grid */}
       {qrCodes.length > 0 && (
         <div className="p-4 print:p-0">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 print:gap-2 print:grid-cols-3">
             {qrCodes.map((qr) => (
               <div 
                 key={qr.id} 
-                className="relative group bg-card border border-border rounded-xl p-4 print:rounded-lg print:p-3 print:border-2 print:border-dashed print:border-muted-foreground"
+                className={`relative group bg-card border-2 rounded-xl p-4 print:rounded-lg print:p-3 print:border-dashed ${
+                  qr.bagType === 'recyclable' 
+                    ? 'border-primary/50' 
+                    : 'border-amber-500/50'
+                }`}
               >
-                {/* Action buttons - Hidden when printing */}
                 <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity print:hidden">
                   <button
                     onClick={() => downloadSingleQR(qr)}
@@ -224,29 +252,41 @@ export default function QRGeneratorPage() {
                 </div>
 
                 <div className="flex flex-col items-center">
-                  {/* Logo */}
                   <div className="text-center mb-2 print:mb-1">
-                    <span className="text-lg font-bold text-primary print:text-sm">♻️ WasteWise</span>
+                    <span className={`text-lg font-bold print:text-sm ${
+                      qr.bagType === 'recyclable' ? 'text-primary' : 'text-amber-600'
+                    }`}>
+                      WasteWise
+                    </span>
+                    <p className={`text-xs font-medium ${
+                      qr.bagType === 'recyclable' ? 'text-primary' : 'text-amber-600'
+                    }`}>
+                      {qr.bagType === 'recyclable' ? '♻️ RECYCLABLES' : '🗑️ ORGANICS'}
+                    </p>
                   </div>
                   
-                  {/* QR Code */}
                   <div className="bg-white p-2 rounded-lg">
                     <QRCodeSVG
                       id={`qr-${qr.id}`}
                       value={generateQRUrl(qr.code)}
                       size={120}
                       level="M"
+                      fgColor={qr.bagType === 'recyclable' ? '#22C55E' : '#D97706'}
                       className="print:w-24 print:h-24"
                     />
                   </div>
                   
-                  {/* Code text */}
                   <p className="mt-2 text-xs font-mono text-muted-foreground text-center break-all print:text-[8px]">
                     {qr.code}
                   </p>
                   
-                  {/* Instructions */}
-                  <p className="mt-1 text-[10px] text-muted-foreground text-center print:text-[7px]">
+                  <p className={`mt-1 text-xs font-bold ${
+                    qr.bagType === 'recyclable' ? 'text-primary' : 'text-amber-600'
+                  }`}>
+                    {qr.points} Points
+                  </p>
+                  
+                  <p className="mt-0.5 text-[10px] text-muted-foreground text-center print:text-[7px]">
                     Scan to activate bag
                   </p>
                 </div>
@@ -256,7 +296,6 @@ export default function QRGeneratorPage() {
         </div>
       )}
 
-      {/* Print Styles */}
       <style>{`
         @media print {
           body {
