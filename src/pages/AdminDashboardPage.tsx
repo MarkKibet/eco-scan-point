@@ -14,7 +14,8 @@ import {
   ShieldAlert,
   Activity,
   Leaf,
-  Trash2
+  Trash2,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import UserActivitySheet from '@/components/UserActivitySheet';
 
 interface DashboardStats {
   totalHouseholds: number;
@@ -87,6 +89,8 @@ export default function AdminDashboardPage() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'collectors' | 'activity'>('overview');
   const [loading, setLoading] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const isAdmin = role === 'admin';
 
@@ -524,12 +528,22 @@ export default function AdminDashboardPage() {
                     </TableHeader>
                     <TableBody>
                       {users.filter(u => u.role === 'household').map(user => (
-                        <TableRow key={user.id}>
+                        <TableRow 
+                          key={user.id} 
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setSheetOpen(true);
+                          }}
+                        >
                           <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                           <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>
                           <TableCell>{user.total_points}</TableCell>
-                          <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell className="flex items-center gap-2">
+                            {new Date(user.created_at).toLocaleDateString()}
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -564,11 +578,21 @@ export default function AdminDashboardPage() {
                     </TableHeader>
                     <TableBody>
                       {users.filter(u => u.role === 'collector').map(user => (
-                        <TableRow key={user.id}>
+                        <TableRow 
+                          key={user.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setSheetOpen(true);
+                          }}
+                        >
                           <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                           <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>
-                          <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell className="flex items-center gap-2">
+                            {new Date(user.created_at).toLocaleDateString()}
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -621,6 +645,11 @@ export default function AdminDashboardPage() {
           )}
         </div>
       )}
+      <UserActivitySheet 
+        user={selectedUser} 
+        open={sheetOpen} 
+        onOpenChange={setSheetOpen} 
+      />
     </div>
   );
 }
