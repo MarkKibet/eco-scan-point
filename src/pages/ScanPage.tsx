@@ -161,11 +161,18 @@ export default function ScanPage() {
       return;
     }
 
+    // Determine bag type and points from QR code prefix
+    const isRecyclable = code.startsWith('WWR');
+    const bagType = isRecyclable ? 'recyclable' : 'organic';
+    const pointsValue = isRecyclable ? 15 : 5;
+
     const { error } = await supabase
       .from('bags')
       .insert({
         qr_code: code,
-        household_id: user.id
+        household_id: user.id,
+        bag_type: bagType,
+        points_value: pointsValue
       });
 
     if (error) {
@@ -238,7 +245,9 @@ export default function ScanPage() {
     }
 
     setSubmitting(true);
-    const pointsAwarded = approved ? 15 : 0;
+    // Determine points based on bag type from QR code prefix
+    const isRecyclable = bagDetails.qr_code.startsWith('WWR');
+    const pointsAwarded = approved ? (isRecyclable ? 15 : 5) : 0;
     const finalReason = disapprovalReason === 'Other' ? customReason : disapprovalReason;
 
     const { error } = await supabase

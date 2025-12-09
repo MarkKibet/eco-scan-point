@@ -12,7 +12,9 @@ import {
   XCircle,
   Download,
   ShieldAlert,
-  Activity
+  Activity,
+  Leaf,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +36,8 @@ interface DashboardStats {
   disapprovedBags: number;
   pendingBags: number;
   totalPointsAwarded: number;
+  recyclableBags: number;
+  organicBags: number;
 }
 
 interface RecentActivity {
@@ -53,6 +57,15 @@ interface UserRecord {
   role: string;
 }
 
+interface BagRecord {
+  id: string;
+  qr_code: string;
+  status: string;
+  bag_type: string;
+  points_value: number;
+  activated_at: string;
+}
+
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--muted))'];
 
 export default function AdminDashboardPage() {
@@ -65,9 +78,12 @@ export default function AdminDashboardPage() {
     approvedBags: 0,
     disapprovedBags: 0,
     pendingBags: 0,
-    totalPointsAwarded: 0
+    totalPointsAwarded: 0,
+    recyclableBags: 0,
+    organicBags: 0
   });
   const [users, setUsers] = useState<UserRecord[]>([]);
+  const [bags, setBags] = useState<BagRecord[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'collectors' | 'activity'>('overview');
   const [loading, setLoading] = useState(true);
@@ -77,8 +93,31 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (isAdmin) {
       fetchDashboardData();
+      setupRealtimeSubscription();
     }
   }, [isAdmin]);
+
+  const setupRealtimeSubscription = () => {
+    const channel = supabase
+      .channel('admin-dashboard')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchDashboardData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_roles' }, () => {
+        fetchDashboardData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bags' }, () => {
+        fetchDashboardData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bag_reviews' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -88,8 +127,8 @@ export default function AdminDashboardPage() {
       .from('user_roles')
       .select('user_id, role');
 
-    const households = rolesData?.filter(r => r.role === 'household') || [];
-    const collectors = rolesData?.filter(r => r.role === 'collector') || [];
+    const householdIds = rolesData?.filter(r => r.role === 'household').map(r => r.user_id) || [];
+    const collectorIds = rolesData?.filter(r => r.role === 'collector').map(r => r.user_id) || [];
 
     // Fetch all bags
     const { data: bagsData } = await supabase
@@ -101,35 +140,45 @@ export default function AdminDashboardPage() {
       .from('bag_reviews')
       .select('*');
 
-    // Fetch profiles
-    const { data: profilesData } = await supabase
+    // Fetch profiles for households
+    const { data: householdProfiles } = await supabase
       .from('profiles')
-      .select('*');
+      .select('*')
+      .in('id', householdIds.length > 0 ? householdIds : ['no-match']);
+
+    // Fetch profiles for collectors
+    const { data: collectorProfiles } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', collectorIds.length > 0 ? collectorIds : ['no-match']);
 
     const approvedReviews = reviewsData?.filter(r => r.status === 'approved') || [];
     const disapprovedReviews = reviewsData?.filter(r => r.status === 'disapproved') || [];
     const totalPoints = approvedReviews.reduce((sum, r) => sum + (r.points_awarded || 0), 0);
 
+    const recyclableBags = bagsData?.filter(b => b.bag_type === 'recyclable' || b.qr_code?.startsWith('WWR')) || [];
+    const organicBags = bagsData?.filter(b => b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
+
     setStats({
-      totalHouseholds: households.length,
-      totalCollectors: collectors.length,
+      totalHouseholds: householdIds.length,
+      totalCollectors: collectorIds.length,
       totalBags: bagsData?.length || 0,
       approvedBags: approvedReviews.length,
       disapprovedBags: disapprovedReviews.length,
       pendingBags: (bagsData?.length || 0) - approvedReviews.length - disapprovedReviews.length,
-      totalPointsAwarded: totalPoints
+      totalPointsAwarded: totalPoints,
+      recyclableBags: recyclableBags.length,
+      organicBags: organicBags.length
     });
 
     // Combine profiles with roles
-    const usersWithRoles: UserRecord[] = (profilesData || []).map(profile => {
-      const userRole = rolesData?.find(r => r.user_id === profile.id);
-      return {
-        ...profile,
-        role: userRole?.role || 'unknown'
-      };
-    });
+    const allProfiles = [
+      ...(householdProfiles || []).map(p => ({ ...p, role: 'household' })),
+      ...(collectorProfiles || []).map(p => ({ ...p, role: 'collector' }))
+    ];
 
-    setUsers(usersWithRoles);
+    setUsers(allProfiles as UserRecord[]);
+    setBags((bagsData || []) as BagRecord[]);
 
     // Build recent activity from bags and reviews
     const activities: RecentActivity[] = [];
@@ -138,7 +187,7 @@ export default function AdminDashboardPage() {
       activities.push({
         id: `bag-${bag.id}`,
         type: 'bag_activated',
-        description: `Bag activated (${bag.qr_code})`,
+        description: `Bag activated (${bag.qr_code}) - ${bag.bag_type === 'organic' ? 'Organic' : 'Recyclable'}`,
         timestamp: bag.activated_at || ''
       });
     });
@@ -152,7 +201,6 @@ export default function AdminDashboardPage() {
       });
     });
 
-    // Sort by timestamp desc
     activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     setRecentActivity(activities.slice(0, 15));
 
@@ -205,6 +253,11 @@ export default function AdminDashboardPage() {
     { name: 'Pending', value: stats.pendingBags }
   ];
 
+  const bagTypeData = [
+    { name: 'Recyclables', value: stats.recyclableBags, color: 'hsl(var(--primary))' },
+    { name: 'Organics', value: stats.organicBags, color: '#D97706' }
+  ];
+
   const barData = [
     { name: 'Households', value: stats.totalHouseholds },
     { name: 'Collectors', value: stats.totalCollectors },
@@ -215,7 +268,7 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-background pb-24">
       <header className="p-4 bg-card border-b border-border">
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => navigate('/auth')}>
+          <Button variant="outline" size="icon" onClick={() => navigate('/')}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
@@ -315,6 +368,37 @@ export default function AdminDashboardPage() {
                 </Card>
               </div>
 
+              {/* Bag Type Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="border-primary/50">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <Leaf className="w-4 h-4 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-primary">{stats.recyclableBags}</p>
+                        <p className="text-xs text-muted-foreground">Green Bags (15 pts)</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-amber-500/50">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
+                        <Trash2 className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-xl font-bold text-amber-600">{stats.organicBags}</p>
+                        <p className="text-xs text-muted-foreground">Black Bags (5 pts)</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               {/* Bag Status Cards */}
               <div className="grid grid-cols-3 gap-3">
                 <Card className="border-primary/50">
@@ -406,7 +490,7 @@ export default function AdminDashboardPage() {
           {activeTab === 'users' && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-sm">Households</CardTitle>
+                <CardTitle className="text-sm">Households ({users.filter(u => u.role === 'household').length})</CardTitle>
                 <Button variant="outline" size="sm" onClick={() => exportData('users')}>
                   <Download className="w-4 h-4 mr-2" />
                   Export
@@ -447,7 +531,7 @@ export default function AdminDashboardPage() {
           {activeTab === 'collectors' && (
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-sm">Collectors</CardTitle>
+                <CardTitle className="text-sm">Collectors ({users.filter(u => u.role === 'collector').length})</CardTitle>
                 <Button variant="outline" size="sm" onClick={() => exportData('collectors')}>
                   <Download className="w-4 h-4 mr-2" />
                   Export
@@ -493,30 +577,31 @@ export default function AdminDashboardPage() {
                   {recentActivity.map(activity => (
                     <div 
                       key={activity.id} 
-                      className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        activity.type === 'bag_approved' ? 'bg-primary/20 text-primary' :
-                        activity.type === 'bag_disapproved' ? 'bg-destructive/20 text-destructive' :
-                        'bg-accent text-foreground'
+                        activity.type === 'bag_approved' 
+                          ? 'bg-primary/20 text-primary'
+                          : activity.type === 'bag_disapproved'
+                          ? 'bg-destructive/20 text-destructive'
+                          : 'bg-accent text-primary'
                       }`}>
                         {activity.type === 'bag_approved' && <CheckCircle className="w-4 h-4" />}
                         {activity.type === 'bag_disapproved' && <XCircle className="w-4 h-4" />}
                         {activity.type === 'bag_activated' && <Package className="w-4 h-4" />}
-                        {activity.type === 'user_registered' && <Users className="w-4 h-4" />}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{activity.description}</p>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{activity.description}</p>
                         <p className="text-xs text-muted-foreground">
-                          {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'N/A'}
+                          {activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'Unknown'}
                         </p>
                       </div>
                     </div>
                   ))}
+                  {recentActivity.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">No recent activity</p>
+                  )}
                 </div>
-                {recentActivity.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">No activity yet</p>
-                )}
               </CardContent>
             </Card>
           )}

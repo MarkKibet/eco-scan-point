@@ -58,22 +58,28 @@ export type Database = {
       bags: {
         Row: {
           activated_at: string | null
+          bag_type: string | null
           household_id: string
           id: string
+          points_value: number | null
           qr_code: string
           status: string | null
         }
         Insert: {
           activated_at?: string | null
+          bag_type?: string | null
           household_id: string
           id?: string
+          points_value?: number | null
           qr_code: string
           status?: string | null
         }
         Update: {
           activated_at?: string | null
+          bag_type?: string | null
           household_id?: string
           id?: string
+          points_value?: number | null
           qr_code?: string
           status?: string | null
         }
