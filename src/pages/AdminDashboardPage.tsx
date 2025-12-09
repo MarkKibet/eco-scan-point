@@ -123,12 +123,16 @@ export default function AdminDashboardPage() {
     setLoading(true);
 
     // Fetch user roles to count households and collectors
-    const { data: rolesData } = await supabase
+    const { data: rolesData, error: rolesError } = await supabase
       .from('user_roles')
       .select('user_id, role');
 
+    console.log('Roles data:', rolesData, 'Error:', rolesError);
+
     const householdIds = rolesData?.filter(r => r.role === 'household').map(r => r.user_id) || [];
     const collectorIds = rolesData?.filter(r => r.role === 'collector').map(r => r.user_id) || [];
+
+    console.log('Household IDs:', householdIds.length, 'Collector IDs:', collectorIds.length);
 
     // Fetch all bags
     const { data: bagsData } = await supabase
@@ -140,17 +144,27 @@ export default function AdminDashboardPage() {
       .from('bag_reviews')
       .select('*');
 
-    // Fetch profiles for households
-    const { data: householdProfiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('id', householdIds.length > 0 ? householdIds : ['no-match']);
+    // Fetch profiles for households - skip if no IDs
+    let householdProfiles: any[] = [];
+    if (householdIds.length > 0) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', householdIds);
+      householdProfiles = data || [];
+    }
 
-    // Fetch profiles for collectors
-    const { data: collectorProfiles } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('id', collectorIds.length > 0 ? collectorIds : ['no-match']);
+    // Fetch profiles for collectors - skip if no IDs
+    let collectorProfiles: any[] = [];
+    if (collectorIds.length > 0) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', collectorIds);
+      collectorProfiles = data || [];
+    }
+
+    console.log('Household profiles:', householdProfiles.length, 'Collector profiles:', collectorProfiles.length);
 
     const approvedReviews = reviewsData?.filter(r => r.status === 'approved') || [];
     const disapprovedReviews = reviewsData?.filter(r => r.status === 'disapproved') || [];
