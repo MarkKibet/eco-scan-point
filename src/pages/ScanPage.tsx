@@ -476,16 +476,31 @@ export default function ScanPage() {
             <Card>
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground mb-3">Bag Info</h3>
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Code: </span>
-                    <span className="font-mono">{bagDetails.qr_code}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Activated: </span>
-                    <span>{new Date(bagDetails.activated_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
+                {(() => {
+                  const isRecyclable = bagDetails.qr_code.startsWith('WWR');
+                  const bagType = isRecyclable ? 'Recyclable' : 'Organic';
+                  const bagColor = isRecyclable ? 'bg-primary' : 'bg-gray-800';
+                  const points = isRecyclable ? 15 : 5;
+                  return (
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Type: </span>
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium text-white ${bagColor}`}>
+                          {bagType} Bag
+                        </span>
+                        <span className="text-primary font-medium">+{points} pts</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Code: </span>
+                        <span className="font-mono">{bagDetails.qr_code}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Activated: </span>
+                        <span>{new Date(bagDetails.activated_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </CardContent>
             </Card>
 
@@ -526,25 +541,31 @@ export default function ScanPage() {
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => handleReview(false)}
-                disabled={submitting || (!disapprovalReason || (disapprovalReason === 'Other' && !customReason))}
-                className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
-              >
-                <ThumbsDown className="w-4 h-4 mr-2" />
-                Disapprove
-              </Button>
-              <Button
-                onClick={() => handleReview(true)}
-                disabled={submitting}
-                className="flex-1"
-              >
-                <ThumbsUp className="w-4 h-4 mr-2" />
-                Approve (+15 pts)
-              </Button>
-            </div>
+            {(() => {
+              const isRecyclable = bagDetails.qr_code.startsWith('WWR');
+              const points = isRecyclable ? 15 : 5;
+              return (
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleReview(false)}
+                    disabled={submitting || (!disapprovalReason || (disapprovalReason === 'Other' && !customReason))}
+                    className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
+                  >
+                    <ThumbsDown className="w-4 h-4 mr-2" />
+                    Disapprove
+                  </Button>
+                  <Button
+                    onClick={() => handleReview(true)}
+                    disabled={submitting}
+                    className="flex-1"
+                  >
+                    <ThumbsUp className="w-4 h-4 mr-2" />
+                    Approve (+{points} pts)
+                  </Button>
+                </div>
+              );
+            })()}
           </div>
         )}
 
