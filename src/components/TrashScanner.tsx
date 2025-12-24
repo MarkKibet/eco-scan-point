@@ -36,26 +36,40 @@ export function TrashScanner() {
       const video = videoRef.current;
       video.srcObject = stream;
       
-      const handleCanPlay = async () => {
+      let mounted = true;
+      let timeoutId: NodeJS.Timeout;
+      
+      const tryPlay = async () => {
+        if (!mounted) return;
         try {
           await video.play();
-          setIsCameraReady(true);
+          if (mounted) setIsCameraReady(true);
         } catch (err) {
           console.error('Video play error:', err);
-          toast({
-            title: "Camera Error",
-            description: "Unable to start video. Try uploading an image.",
-            variant: "destructive",
-          });
+          // Retry after a short delay
+          timeoutId = setTimeout(tryPlay, 500);
         }
       };
 
-      video.addEventListener('canplay', handleCanPlay);
+      // Start trying to play immediately and also on loadeddata
+      video.onloadeddata = () => tryPlay();
+      tryPlay();
+      
+      // Fallback timeout - mark ready after 3 seconds if video has dimensions
+      const fallbackTimeout = setTimeout(() => {
+        if (mounted && video.videoWidth > 0 && video.videoHeight > 0) {
+          setIsCameraReady(true);
+        }
+      }, 3000);
+
       return () => {
-        video.removeEventListener('canplay', handleCanPlay);
+        mounted = false;
+        clearTimeout(timeoutId);
+        clearTimeout(fallbackTimeout);
+        video.onloadeddata = null;
       };
     }
-  }, [stream, isCameraOpen, toast]);
+  }, [stream, isCameraOpen]);
 
   const startCamera = async () => {
     try {

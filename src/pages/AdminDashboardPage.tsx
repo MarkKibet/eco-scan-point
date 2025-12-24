@@ -17,7 +17,9 @@ import {
   Trash2,
   ChevronRight,
   ClipboardCheck,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +34,8 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import UserActivitySheet from '@/components/UserActivitySheet';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
 
 interface DashboardStats {
   totalHouseholds: number;
@@ -97,6 +101,17 @@ interface BagRecord {
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--destructive))', 'hsl(var(--muted))'];
 const RECEIVER_COLORS = ['#10b981', '#ef4444', '#6b7280'];
 
+interface FeedbackRecord {
+  id: string;
+  household_id: string;
+  subject: string;
+  message: string;
+  status: string;
+  admin_response: string | null;
+  created_at: string;
+  household_name?: string;
+}
+
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const { role } = useAuth();
@@ -121,10 +136,13 @@ export default function AdminDashboardPage() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [collectorAccuracy, setCollectorAccuracy] = useState<CollectorAccuracy[]>([]);
   const [receiverStats, setReceiverStats] = useState<ReceiverStats[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'collectors' | 'receivers' | 'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'collectors' | 'receivers' | 'activity' | 'feedback'>('overview');
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [feedbackList, setFeedbackList] = useState<FeedbackRecord[]>([]);
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState('');
 
   const isAdmin = role === 'admin';
 
@@ -365,6 +383,66 @@ export default function AdminDashboardPage() {
     setRecentActivity(activities.slice(0, 20));
 
     setLoading(false);
+    
+    // Fetch household feedback
+    fetchFeedback();
+  };
+
+  const fetchFeedback = async () => {
+    try {
+      const { data: feedbackData, error } = await supabase
+        .from('household_feedback')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Get household names
+      const householdIds = [...new Set(feedbackData?.map(f => f.household_id) || [])];
+      let profilesMap: Record<string, string> = {};
+      
+      if (householdIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .in('id', householdIds);
+        
+        profiles?.forEach(p => {
+          profilesMap[p.id] = p.name;
+        });
+      }
+
+      const feedbackWithNames = feedbackData?.map(f => ({
+        ...f,
+        household_name: profilesMap[f.household_id] || 'Unknown'
+      })) || [];
+
+      setFeedbackList(feedbackWithNames);
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+    }
+  };
+
+  const handleRespondToFeedback = async (feedbackId: string) => {
+    if (!responseText.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('household_feedback')
+        .update({
+          admin_response: responseText.trim(),
+          status: 'reviewed'
+        })
+        .eq('id', feedbackId);
+
+      if (error) throw error;
+
+      setRespondingTo(null);
+      setResponseText('');
+      fetchFeedback();
+    } catch (error) {
+      console.error('Error responding to feedback:', error);
+    }
   };
 
   const exportData = (type: 'users' | 'collectors') => {
@@ -446,7 +524,8 @@ export default function AdminDashboardPage() {
             { id: 'users', label: 'Households', icon: Users },
             { id: 'collectors', label: 'Collectors', icon: Truck },
             { id: 'receivers', label: 'Receivers', icon: ClipboardCheck },
-            { id: 'activity', label: 'Activity', icon: Activity }
+            { id: 'activity', label: 'Activity', icon: Activity },
+            { id: 'feedback', label: 'Feedback', icon: MessageSquare }
           ].map(tab => (
             <Button
               key={tab.id}
@@ -1004,6 +1083,93 @@ export default function AdminDashboardPage() {
                     <p className="text-center text-muted-foreground py-8">No recent activity</p>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Feedback Tab */}
+          {activeTab === 'feedback' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  Household Feedback
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {feedbackList.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No feedback submitted yet</p>
+                ) : (
+                  <div className="space-y-4">
+                    {feedbackList.map((feedback) => (
+                      <Card key={feedback.id} className="border">
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="font-medium text-foreground">{feedback.subject}</p>
+                              <p className="text-xs text-muted-foreground">
+                                From: {feedback.household_name} • {format(new Date(feedback.created_at), 'MMM d, yyyy h:mm a')}
+                              </p>
+                            </div>
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              feedback.status === 'pending' 
+                                ? 'bg-amber-100 text-amber-700' 
+                                : 'bg-green-100 text-green-700'
+                            }`}>
+                              {feedback.status === 'pending' ? 'Pending' : 'Reviewed'}
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{feedback.message}</p>
+                          
+                          {feedback.admin_response ? (
+                            <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                              <p className="text-xs font-medium text-primary mb-1">Your Response:</p>
+                              <p className="text-sm text-foreground">{feedback.admin_response}</p>
+                            </div>
+                          ) : respondingTo === feedback.id ? (
+                            <div className="space-y-2">
+                              <Textarea
+                                placeholder="Write your response..."
+                                value={responseText}
+                                onChange={(e) => setResponseText(e.target.value)}
+                                rows={3}
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleRespondToFeedback(feedback.id)}
+                                  disabled={!responseText.trim()}
+                                >
+                                  <Send className="w-4 h-4 mr-2" />
+                                  Send Response
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setRespondingTo(null);
+                                    setResponseText('');
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRespondingTo(feedback.id)}
+                            >
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Respond
+                            </Button>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
