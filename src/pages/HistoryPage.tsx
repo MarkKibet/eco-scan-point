@@ -96,11 +96,11 @@ export default function HistoryPage() {
 
   const getBagTypeInfo = (qrCode: string) => {
     if (qrCode.startsWith('WWR')) {
-      return { type: 'Recyclable', color: 'bg-primary', textColor: 'text-primary', icon: Leaf, points: 15 };
+      return { type: 'Recyclable', color: 'bg-blue-600', textColor: 'text-blue-600', icon: Leaf, points: 15 };
     } else if (qrCode.startsWith('WWO')) {
-      return { type: 'Organic', color: 'bg-gray-800', textColor: 'text-gray-800', icon: Trash2, points: 5 };
+      return { type: 'Biodegradable', color: 'bg-green-600', textColor: 'text-green-600', icon: Trash2, points: 5 };
     } else if (qrCode.startsWith('WWS')) {
-      return { type: 'Residual', color: 'bg-destructive', textColor: 'text-destructive', icon: AlertTriangle, points: 10 };
+      return { type: 'Residual', color: 'bg-destructive', textColor: 'text-destructive', icon: AlertTriangle, points: 1 };
     }
     return { type: 'Unknown', color: 'bg-muted', textColor: 'text-muted-foreground', icon: Package, points: 0 };
   };
@@ -139,7 +139,7 @@ export default function HistoryPage() {
             const bagTypeInfo = getBagTypeInfo(bag.qr_code);
             const BagIcon = bagTypeInfo.icon;
             return (
-              <Card key={bag.id} className={`border-l-4`} style={{ borderLeftColor: bagTypeInfo.color.includes('primary') ? 'hsl(var(--primary))' : bagTypeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#1f2937' }}>
+              <Card key={bag.id} className={`border-l-4`} style={{ borderLeftColor: bagTypeInfo.color.includes('blue') ? '#2563eb' : bagTypeInfo.color.includes('green') ? '#16a34a' : bagTypeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#6b7280' }}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

@@ -293,16 +293,16 @@ export default function UserActivitySheet({ user, open, onOpenChange }: UserActi
                     bagActivities.map(bag => {
                       const getBagTypeInfo = () => {
                         if (bag.qr_code.startsWith('WWS') || bag.bag_type === 'residual') {
-                          return { label: 'Residual', points: 10, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
-                        } else if (bag.qr_code.startsWith('WWO') || bag.bag_type === 'organic') {
-                          return { label: 'Organic', points: 5, color: 'bg-gray-800', textColor: 'text-gray-800', Icon: Trash2 };
+                          return { label: 'Residual', points: 1, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
+                        } else if (bag.qr_code.startsWith('WWO') || bag.bag_type === 'organic' || bag.bag_type === 'biodegradable') {
+                          return { label: 'Biodegradable', points: 5, color: 'bg-green-600', textColor: 'text-green-600', Icon: Trash2 };
                         }
-                        return { label: 'Recyclable', points: 15, color: 'bg-primary', textColor: 'text-primary', Icon: Leaf };
+                        return { label: 'Recyclable', points: 15, color: 'bg-blue-600', textColor: 'text-blue-600', Icon: Leaf };
                       };
                       const typeInfo = getBagTypeInfo();
                       
                       return (
-                        <div key={bag.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('primary') ? 'hsl(var(--primary))' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#1f2937' }}>
+                        <div key={bag.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('blue') ? '#2563eb' : typeInfo.color.includes('green') ? '#16a34a' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#6b7280' }}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${typeInfo.color}`}>
@@ -352,16 +352,16 @@ export default function UserActivitySheet({ user, open, onOpenChange }: UserActi
                     reviewActivities.map(review => {
                       const getBagTypeInfo = () => {
                         if (review.qr_code.startsWith('WWS') || review.bag_type === 'residual') {
-                          return { label: 'Residual', points: 10, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
-                        } else if (review.qr_code.startsWith('WWO') || review.bag_type === 'organic') {
-                          return { label: 'Organic', points: 5, color: 'bg-gray-800', textColor: 'text-gray-800', Icon: Trash2 };
+                          return { label: 'Residual', points: 1, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
+                        } else if (review.qr_code.startsWith('WWO') || review.bag_type === 'organic' || review.bag_type === 'biodegradable') {
+                          return { label: 'Biodegradable', points: 5, color: 'bg-green-600', textColor: 'text-green-600', Icon: Trash2 };
                         }
-                        return { label: 'Recyclable', points: 15, color: 'bg-primary', textColor: 'text-primary', Icon: Leaf };
+                        return { label: 'Recyclable', points: 15, color: 'bg-blue-600', textColor: 'text-blue-600', Icon: Leaf };
                       };
                       const typeInfo = getBagTypeInfo();
                       
                       return (
-                        <div key={review.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('primary') ? 'hsl(var(--primary))' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#1f2937' }}>
+                        <div key={review.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('blue') ? '#2563eb' : typeInfo.color.includes('green') ? '#16a34a' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#6b7280' }}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${typeInfo.color}`}>
