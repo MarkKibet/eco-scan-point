@@ -165,11 +165,11 @@ export default function ScanPage() {
     let bagType = 'recyclable';
     let pointsValue = 15;
     if (code.startsWith('WWO')) {
-      bagType = 'organic';
+      bagType = 'biodegradable';
       pointsValue = 5;
     } else if (code.startsWith('WWS')) {
       bagType = 'residual';
-      pointsValue = 10;
+      pointsValue = 1;
     }
 
     const { error } = await supabase
@@ -259,7 +259,7 @@ export default function ScanPage() {
       } else if (bagDetails.qr_code.startsWith('WWO')) {
         pointsAwarded = 5;
       } else if (bagDetails.qr_code.startsWith('WWS')) {
-        pointsAwarded = 10;
+        pointsAwarded = 1;
       }
     }
     const finalReason = disapprovalReason === 'Other' ? customReason : disapprovalReason;
@@ -492,16 +492,16 @@ export default function ScanPage() {
                 <h3 className="font-semibold text-foreground mb-3">Bag Info</h3>
                 {(() => {
                   let bagType = 'Recyclable';
-                  let bagColor = 'bg-primary';
+                  let bagColor = 'bg-blue-600';
                   let points = 15;
                   if (bagDetails.qr_code.startsWith('WWO')) {
-                    bagType = 'Organic';
-                    bagColor = 'bg-gray-800';
+                    bagType = 'Biodegradable';
+                    bagColor = 'bg-green-600';
                     points = 5;
                   } else if (bagDetails.qr_code.startsWith('WWS')) {
                     bagType = 'Residual';
                     bagColor = 'bg-destructive';
-                    points = 10;
+                    points = 1;
                   }
                   return (
                     <div className="space-y-2 text-sm">

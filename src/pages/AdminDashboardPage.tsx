@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
     const totalPoints = approvedReviews.reduce((sum, r) => sum + (r.points_awarded || 0), 0);
 
     const recyclableBags = bagsData?.filter(b => b.bag_type === 'recyclable' || b.qr_code?.startsWith('WWR')) || [];
-    const organicBags = bagsData?.filter(b => b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
+    const biodegradableBags = bagsData?.filter(b => b.bag_type === 'biodegradable' || b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
     const residualBags = bagsData?.filter(b => b.bag_type === 'residual' || b.qr_code?.startsWith('WWS')) || [];
 
     setStats({
@@ -189,7 +189,7 @@ export default function AdminDashboardPage() {
       pendingBags: (bagsData?.length || 0) - approvedReviews.length - disapprovedReviews.length,
       totalPointsAwarded: totalPoints,
       recyclableBags: recyclableBags.length,
-      organicBags: organicBags.length,
+      organicBags: biodegradableBags.length,
       residualBags: residualBags.length
     });
 
@@ -207,7 +207,7 @@ export default function AdminDashboardPage() {
     
     bagsData?.slice(-10).forEach(bag => {
       let bagTypeName = 'Recyclable';
-      if (bag.qr_code?.startsWith('WWO') || bag.bag_type === 'organic') bagTypeName = 'Organic';
+      if (bag.qr_code?.startsWith('WWO') || bag.bag_type === 'organic' || bag.bag_type === 'biodegradable') bagTypeName = 'Biodegradable';
       else if (bag.qr_code?.startsWith('WWS') || bag.bag_type === 'residual') bagTypeName = 'Residual';
       activities.push({
         id: `bag-${bag.id}`,
@@ -395,26 +395,26 @@ export default function AdminDashboardPage() {
 
               {/* Bag Type Stats */}
               <div className="grid grid-cols-3 gap-3">
-                <Card className="border-primary/50">
+                <Card className="border-blue-500/50">
                   <CardContent className="p-3">
                     <div className="flex flex-col items-center text-center">
-                      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mb-1">
-                        <Leaf className="w-4 h-4 text-primary-foreground" />
+                      <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mb-1">
+                        <Leaf className="w-4 h-4 text-white" />
                       </div>
-                      <p className="text-xl font-bold text-primary">{stats.recyclableBags}</p>
-                      <p className="text-xs text-muted-foreground">Green (15 pts)</p>
+                      <p className="text-xl font-bold text-blue-600">{stats.recyclableBags}</p>
+                      <p className="text-xs text-muted-foreground">Blue (15 pts)</p>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-gray-500/50">
+                <Card className="border-green-500/50">
                   <CardContent className="p-3">
                     <div className="flex flex-col items-center text-center">
-                      <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center mb-1">
+                      <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center mb-1">
                         <Trash2 className="w-4 h-4 text-white" />
                       </div>
-                      <p className="text-xl font-bold text-gray-800">{stats.organicBags}</p>
-                      <p className="text-xs text-muted-foreground">Black (5 pts)</p>
+                      <p className="text-xl font-bold text-green-600">{stats.organicBags}</p>
+                      <p className="text-xs text-muted-foreground">Green (5 pts)</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -426,7 +426,7 @@ export default function AdminDashboardPage() {
                         <Trash2 className="w-4 h-4 text-white" />
                       </div>
                       <p className="text-xl font-bold text-destructive">{stats.residualBags}</p>
-                      <p className="text-xs text-muted-foreground">Red (10 pts)</p>
+                      <p className="text-xs text-muted-foreground">Red (1 pt)</p>
                     </div>
                   </CardContent>
                 </Card>
