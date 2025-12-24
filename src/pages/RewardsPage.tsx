@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PointsBadge } from '@/components/PointsBadge';
@@ -148,13 +149,20 @@ const generateMockCode = (type: string): string => {
 
 export default function RewardsPage() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
   const [step, setStep] = useState<RedemptionStep>('select');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [meterNumber, setMeterNumber] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [userPoints, setUserPoints] = useState(profile?.total_points || 0);
+
+  // Sync userPoints with profile when profile updates
+  useEffect(() => {
+    if (profile?.total_points !== undefined) {
+      setUserPoints(profile.total_points);
+    }
+  }, [profile?.total_points]);
 
   const handleRedeemClick = (reward: Reward) => {
     setSelectedReward(reward);
@@ -176,7 +184,7 @@ export default function RewardsPage() {
   };
 
   const handleConfirmRedeem = async () => {
-    if (!selectedReward || !profile) return;
+    if (!selectedReward || !profile || !user) return;
     if (!validateInput()) return;
 
     if (userPoints < selectedReward.pointsCost) {
@@ -186,15 +194,29 @@ export default function RewardsPage() {
 
     setStep('processing');
 
-    // Simulate API processing
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    // Simulate API processing delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Deduct points from database
+    const newPoints = userPoints - selectedReward.pointsCost;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ total_points: newPoints })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Error deducting points:', error);
+      toast.error('Failed to process redemption. Please try again.');
+      setStep('confirm');
+      return;
+    }
+
+    // Update local state
+    setUserPoints(newPoints);
 
     // Generate mock confirmation
     const code = generateMockCode(selectedReward.category);
     setGeneratedCode(code);
-    
-    // Deduct points (mock - in real app this would be server-side)
-    setUserPoints(prev => prev - selectedReward.pointsCost);
     
     setStep('success');
   };
