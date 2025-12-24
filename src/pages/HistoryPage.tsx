@@ -64,8 +64,10 @@ export default function HistoryPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
+      case 'receiver_approved':
         return <CheckCircle className="w-5 h-5 text-primary" />;
       case 'disapproved':
+      case 'receiver_disapproved':
         return <XCircle className="w-5 h-5 text-destructive" />;
       default:
         return <Clock className="w-5 h-5 text-muted-foreground" />;
@@ -76,8 +78,12 @@ export default function HistoryPage() {
     switch (status) {
       case 'approved':
         return 'Approved';
+      case 'receiver_approved':
+        return 'Verified ✓';
       case 'disapproved':
         return 'Disapproved';
+      case 'receiver_disapproved':
+        return 'Rejected';
       default:
         return 'Pending Review';
     }
@@ -86,8 +92,10 @@ export default function HistoryPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
+      case 'receiver_approved':
         return 'bg-primary/10 text-primary';
       case 'disapproved':
+      case 'receiver_disapproved':
         return 'bg-destructive/10 text-destructive';
       default:
         return 'bg-muted text-muted-foreground';
@@ -176,7 +184,7 @@ export default function HistoryPage() {
                           +{bag.review.points_awarded} pts
                         </span>
                       )}
-                      {bag.status === 'disapproved' && (
+                      {(bag.status === 'disapproved' || bag.status === 'receiver_disapproved') && (
                         <span className="text-sm font-semibold text-destructive">
                           0 pts
                         </span>
