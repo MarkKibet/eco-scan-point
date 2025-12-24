@@ -32,8 +32,9 @@ export function TrashScanner() {
 
   const startCamera = async () => {
     try {
+      // Use lower resolution for faster loading
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
       });
       setStream(mediaStream);
       setIsCameraOpen(true);
@@ -41,8 +42,7 @@ export function TrashScanner() {
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
+        videoRef.current.onloadeddata = () => {
           setIsCameraReady(true);
         };
       }
@@ -50,7 +50,7 @@ export function TrashScanner() {
       console.error('Camera error:', error);
       toast({
         title: "Camera Error",
-        description: "Unable to access camera. Please check permissions or try uploading an image instead.",
+        description: "Unable to access camera. Try uploading an image instead.",
         variant: "destructive",
       });
     }
@@ -78,13 +78,16 @@ export function TrashScanner() {
     const video = videoRef.current;
     const canvas = canvasRef.current || document.createElement('canvas');
     
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Use smaller dimensions for faster upload
+    const maxSize = 512;
+    const scale = Math.min(maxSize / video.videoWidth, maxSize / video.videoHeight, 1);
+    canvas.width = video.videoWidth * scale;
+    canvas.height = video.videoHeight * scale;
     
     const ctx = canvas.getContext('2d');
     if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
-      ctx.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/jpeg', 0.6);
       
       if (imageData && imageData.length > 100) {
         setCapturedImage(imageData);
@@ -106,7 +109,30 @@ export function TrashScanner() {
     }
   }, [isCameraReady, stopCamera, toast]);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSize = 512;
+        const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.6));
+        } else {
+          reject(new Error('Canvas context error'));
+        }
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
@@ -118,28 +144,17 @@ export function TrashScanner() {
         return;
       }
       
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string;
-        if (imageData && imageData.startsWith('data:image')) {
-          setCapturedImage(imageData);
-          analyzeImage(imageData);
-        } else {
-          toast({
-            title: "Invalid image",
-            description: "Unable to read image file.",
-            variant: "destructive",
-          });
-        }
-      };
-      reader.onerror = () => {
+      try {
+        const imageData = await compressImage(file);
+        setCapturedImage(imageData);
+        analyzeImage(imageData);
+      } catch {
         toast({
           title: "Read error",
-          description: "Failed to read the image file.",
+          description: "Failed to process the image.",
           variant: "destructive",
         });
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
