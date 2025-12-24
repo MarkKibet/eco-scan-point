@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, Upload, Loader2, Sparkles, Leaf, Recycle, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,33 @@ export function TrashScanner() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const { toast } = useToast();
 
+  // Attach stream to video element when both are ready
+  useEffect(() => {
+    if (stream && videoRef.current && isCameraOpen) {
+      const video = videoRef.current;
+      video.srcObject = stream;
+      
+      const handleCanPlay = async () => {
+        try {
+          await video.play();
+          setIsCameraReady(true);
+        } catch (err) {
+          console.error('Video play error:', err);
+          toast({
+            title: "Camera Error",
+            description: "Unable to start video. Try uploading an image.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      video.addEventListener('canplay', handleCanPlay);
+      return () => {
+        video.removeEventListener('canplay', handleCanPlay);
+      };
+    }
+  }, [stream, isCameraOpen, toast]);
+
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -38,24 +65,6 @@ export function TrashScanner() {
       setStream(mediaStream);
       setIsCameraOpen(true);
       setIsCameraReady(false);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        // Must explicitly play and wait for it
-        videoRef.current.onloadedmetadata = async () => {
-          try {
-            await videoRef.current?.play();
-            setIsCameraReady(true);
-          } catch (playError) {
-            console.error('Video play error:', playError);
-            toast({
-              title: "Camera Error",
-              description: "Unable to start video. Try uploading an image.",
-              variant: "destructive",
-            });
-          }
-        };
-      }
     } catch (error) {
       console.error('Camera error:', error);
       toast({
