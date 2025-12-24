@@ -15,6 +15,7 @@ import CollectorReviewsPage from "@/pages/CollectorReviewsPage";
 import QRGeneratorPage from "@/pages/QRGeneratorPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import TrashScannerPage from "@/pages/TrashScannerPage";
+import FeedbackPage from "@/pages/FeedbackPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ function AppContent() {
         <Route path="/qr-generator" element={<ProtectedRoute><QRGeneratorPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
         <Route path="/trash-scanner" element={<ProtectedRoute><TrashScannerPage /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute><FeedbackPage /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <ConditionalBottomNav />

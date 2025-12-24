@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Recycle, Scan, History, Gift, TrendingUp, Users, QrCode, BarChart3, LogOut, Info, Sparkles } from 'lucide-react';
+import { Recycle, Scan, History, Gift, TrendingUp, Users, QrCode, BarChart3, LogOut, Info, Sparkles, MessageSquarePlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ScanButton } from '@/components/ScanButton';
 import RecyclingGuide from '@/components/RecyclingGuide';
@@ -195,6 +195,14 @@ export default function HomePage() {
                     <Gift className="w-6 h-6 text-primary" />
                   </div>
                   <p className="font-medium text-foreground text-sm">Rewards</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:border-blue-500 transition-colors" onClick={() => navigate('/feedback')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-2">
+                    <MessageSquarePlus className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">Feedback</p>
                 </CardContent>
               </Card>
             </>
