@@ -32,7 +32,6 @@ export function TrashScanner() {
 
   const startCamera = async () => {
     try {
-      // Use lower resolution for faster loading
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
       });
@@ -42,8 +41,19 @@ export function TrashScanner() {
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.onloadeddata = () => {
-          setIsCameraReady(true);
+        // Must explicitly play and wait for it
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            await videoRef.current?.play();
+            setIsCameraReady(true);
+          } catch (playError) {
+            console.error('Video play error:', playError);
+            toast({
+              title: "Camera Error",
+              description: "Unable to start video. Try uploading an image.",
+              variant: "destructive",
+            });
+          }
         };
       }
     } catch (error) {
