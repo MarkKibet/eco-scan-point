@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Camera, Upload, Loader2, Sparkles, Leaf, Recycle, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,61 +24,120 @@ export function TrashScanner() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const { toast } = useToast();
 
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
       });
       setStream(mediaStream);
       setIsCameraOpen(true);
+      setIsCameraReady(false);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+          setIsCameraReady(true);
+        };
       }
     } catch (error) {
+      console.error('Camera error:', error);
       toast({
         title: "Camera Error",
-        description: "Unable to access camera. Please check permissions.",
+        description: "Unable to access camera. Please check permissions or try uploading an image instead.",
         variant: "destructive",
       });
     }
   };
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
     setIsCameraOpen(false);
-  };
+    setIsCameraReady(false);
+  }, [stream]);
 
-  const capturePhoto = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current || !isCameraReady) {
+      toast({
+        title: "Camera not ready",
+        description: "Please wait for the camera to initialize.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current || document.createElement('canvas');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (ctx && video.videoWidth > 0 && video.videoHeight > 0) {
+      ctx.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      
+      if (imageData && imageData.length > 100) {
         setCapturedImage(imageData);
         stopCamera();
         analyzeImage(imageData);
+      } else {
+        toast({
+          title: "Capture failed",
+          description: "Unable to capture image. Please try again.",
+          variant: "destructive",
+        });
       }
+    } else {
+      toast({
+        title: "Video not ready",
+        description: "Please wait for video to load.",
+        variant: "destructive",
+      });
     }
-  };
+  }, [isCameraReady, stopCamera, toast]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file",
+          description: "Please upload an image file.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageData = e.target?.result as string;
-        setCapturedImage(imageData);
-        analyzeImage(imageData);
+        if (imageData && imageData.startsWith('data:image')) {
+          setCapturedImage(imageData);
+          analyzeImage(imageData);
+        } else {
+          toast({
+            title: "Invalid image",
+            description: "Unable to read image file.",
+            variant: "destructive",
+          });
+        }
+      };
+      reader.onerror = () => {
+        toast({
+          title: "Read error",
+          description: "Failed to read the image file.",
+          variant: "destructive",
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -187,16 +246,23 @@ export function TrashScanner() {
               ref={videoRef}
               autoPlay
               playsInline
-              className="w-full rounded-lg"
+              muted
+              className="w-full rounded-lg bg-muted"
             />
+            <canvas ref={canvasRef} className="hidden" />
+            {!isCameraReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-3">
               <Button variant="secondary" onClick={stopCamera}>
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
-              <Button onClick={capturePhoto}>
+              <Button onClick={capturePhoto} disabled={!isCameraReady}>
                 <Camera className="w-4 h-4 mr-2" />
-                Capture
+                {isCameraReady ? 'Capture' : 'Loading...'}
               </Button>
             </div>
           </div>
