@@ -158,8 +158,9 @@ export default function HomePage() {
                   </div>
                   <p className="font-medium text-foreground text-sm">My Verifications</p>
                 </CardContent>
-              </Card>
+            </Card>
             </>
+          )}
 
           {/* Household actions */}
           {isHousehold && (
