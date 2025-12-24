@@ -40,6 +40,7 @@ interface DashboardStats {
   totalPointsAwarded: number;
   recyclableBags: number;
   organicBags: number;
+  residualBags: number;
 }
 
 interface RecentActivity {
@@ -82,7 +83,8 @@ export default function AdminDashboardPage() {
     pendingBags: 0,
     totalPointsAwarded: 0,
     recyclableBags: 0,
-    organicBags: 0
+    organicBags: 0,
+    residualBags: 0
   });
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [bags, setBags] = useState<BagRecord[]>([]);
@@ -176,6 +178,7 @@ export default function AdminDashboardPage() {
 
     const recyclableBags = bagsData?.filter(b => b.bag_type === 'recyclable' || b.qr_code?.startsWith('WWR')) || [];
     const organicBags = bagsData?.filter(b => b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
+    const residualBags = bagsData?.filter(b => b.bag_type === 'residual' || b.qr_code?.startsWith('WWS')) || [];
 
     setStats({
       totalHouseholds: householdIds.length,
@@ -186,7 +189,8 @@ export default function AdminDashboardPage() {
       pendingBags: (bagsData?.length || 0) - approvedReviews.length - disapprovedReviews.length,
       totalPointsAwarded: totalPoints,
       recyclableBags: recyclableBags.length,
-      organicBags: organicBags.length
+      organicBags: organicBags.length,
+      residualBags: residualBags.length
     });
 
     // Combine profiles with roles
@@ -202,10 +206,13 @@ export default function AdminDashboardPage() {
     const activities: RecentActivity[] = [];
     
     bagsData?.slice(-10).forEach(bag => {
+      let bagTypeName = 'Recyclable';
+      if (bag.qr_code?.startsWith('WWO') || bag.bag_type === 'organic') bagTypeName = 'Organic';
+      else if (bag.qr_code?.startsWith('WWS') || bag.bag_type === 'residual') bagTypeName = 'Residual';
       activities.push({
         id: `bag-${bag.id}`,
         type: 'bag_activated',
-        description: `Bag activated (${bag.qr_code}) - ${bag.bag_type === 'organic' ? 'Organic' : 'Recyclable'}`,
+        description: `Bag activated (${bag.qr_code}) - ${bagTypeName}`,
         timestamp: bag.activated_at || ''
       });
     });
@@ -387,31 +394,39 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Bag Type Stats */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Card className="border-primary/50">
                   <CardContent className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mb-1">
                         <Leaf className="w-4 h-4 text-primary-foreground" />
                       </div>
-                      <div>
-                        <p className="text-xl font-bold text-primary">{stats.recyclableBags}</p>
-                        <p className="text-xs text-muted-foreground">Green Bags (15 pts)</p>
-                      </div>
+                      <p className="text-xl font-bold text-primary">{stats.recyclableBags}</p>
+                      <p className="text-xs text-muted-foreground">Green (15 pts)</p>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-amber-500/50">
+                <Card className="border-gray-500/50">
                   <CardContent className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-amber-600 rounded-lg flex items-center justify-center">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center mb-1">
                         <Trash2 className="w-4 h-4 text-white" />
                       </div>
-                      <div>
-                        <p className="text-xl font-bold text-amber-600">{stats.organicBags}</p>
-                        <p className="text-xs text-muted-foreground">Black Bags (5 pts)</p>
+                      <p className="text-xl font-bold text-gray-800">{stats.organicBags}</p>
+                      <p className="text-xs text-muted-foreground">Black (5 pts)</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-destructive/50">
+                  <CardContent className="p-3">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="w-8 h-8 bg-destructive rounded-lg flex items-center justify-center mb-1">
+                        <Trash2 className="w-4 h-4 text-white" />
                       </div>
+                      <p className="text-xl font-bold text-destructive">{stats.residualBags}</p>
+                      <p className="text-xs text-muted-foreground">Red (10 pts)</p>
                     </div>
                   </CardContent>
                 </Card>

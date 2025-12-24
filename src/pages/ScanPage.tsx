@@ -162,9 +162,15 @@ export default function ScanPage() {
     }
 
     // Determine bag type and points from QR code prefix
-    const isRecyclable = code.startsWith('WWR');
-    const bagType = isRecyclable ? 'recyclable' : 'organic';
-    const pointsValue = isRecyclable ? 15 : 5;
+    let bagType = 'recyclable';
+    let pointsValue = 15;
+    if (code.startsWith('WWO')) {
+      bagType = 'organic';
+      pointsValue = 5;
+    } else if (code.startsWith('WWS')) {
+      bagType = 'residual';
+      pointsValue = 10;
+    }
 
     const { error } = await supabase
       .from('bags')
@@ -246,8 +252,16 @@ export default function ScanPage() {
 
     setSubmitting(true);
     // Determine points based on bag type from QR code prefix
-    const isRecyclable = bagDetails.qr_code.startsWith('WWR');
-    const pointsAwarded = approved ? (isRecyclable ? 15 : 5) : 0;
+    let pointsAwarded = 0;
+    if (approved) {
+      if (bagDetails.qr_code.startsWith('WWR')) {
+        pointsAwarded = 15;
+      } else if (bagDetails.qr_code.startsWith('WWO')) {
+        pointsAwarded = 5;
+      } else if (bagDetails.qr_code.startsWith('WWS')) {
+        pointsAwarded = 10;
+      }
+    }
     const finalReason = disapprovalReason === 'Other' ? customReason : disapprovalReason;
 
     const { error } = await supabase
@@ -477,10 +491,18 @@ export default function ScanPage() {
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground mb-3">Bag Info</h3>
                 {(() => {
-                  const isRecyclable = bagDetails.qr_code.startsWith('WWR');
-                  const bagType = isRecyclable ? 'Recyclable' : 'Organic';
-                  const bagColor = isRecyclable ? 'bg-primary' : 'bg-gray-800';
-                  const points = isRecyclable ? 15 : 5;
+                  let bagType = 'Recyclable';
+                  let bagColor = 'bg-primary';
+                  let points = 15;
+                  if (bagDetails.qr_code.startsWith('WWO')) {
+                    bagType = 'Organic';
+                    bagColor = 'bg-gray-800';
+                    points = 5;
+                  } else if (bagDetails.qr_code.startsWith('WWS')) {
+                    bagType = 'Residual';
+                    bagColor = 'bg-destructive';
+                    points = 10;
+                  }
                   return (
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
