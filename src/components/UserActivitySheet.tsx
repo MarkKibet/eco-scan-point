@@ -17,7 +17,8 @@ import {
   Phone,
   TrendingUp,
   Leaf,
-  Trash2
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 interface UserRecord {
@@ -289,84 +290,110 @@ export default function UserActivitySheet({ user, open, onOpenChange }: UserActi
               <div className="space-y-3 max-h-[400px] overflow-y-auto">
                 {isHousehold ? (
                   bagActivities.length > 0 ? (
-                    bagActivities.map(bag => (
-                      <div key={bag.id} className="border rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {bag.bag_type === 'organic' ? (
-                              <Trash2 className="w-4 h-4 text-amber-600" />
-                            ) : (
-                              <Leaf className="w-4 h-4 text-primary" />
-                            )}
-                            <span className="text-sm font-mono">{bag.qr_code}</span>
+                    bagActivities.map(bag => {
+                      const getBagTypeInfo = () => {
+                        if (bag.qr_code.startsWith('WWS') || bag.bag_type === 'residual') {
+                          return { label: 'Residual', points: 10, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
+                        } else if (bag.qr_code.startsWith('WWO') || bag.bag_type === 'organic') {
+                          return { label: 'Organic', points: 5, color: 'bg-gray-800', textColor: 'text-gray-800', Icon: Trash2 };
+                        }
+                        return { label: 'Recyclable', points: 15, color: 'bg-primary', textColor: 'text-primary', Icon: Leaf };
+                      };
+                      const typeInfo = getBagTypeInfo();
+                      
+                      return (
+                        <div key={bag.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('primary') ? 'hsl(var(--primary))' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#1f2937' }}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${typeInfo.color}`}>
+                                <typeInfo.Icon className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-sm font-mono">{bag.qr_code}</span>
+                            </div>
+                            <Badge variant={
+                              bag.review?.status === 'approved' ? 'default' :
+                              bag.review?.status === 'disapproved' ? 'destructive' : 'secondary'
+                            }>
+                              {bag.review?.status || 'Pending'}
+                            </Badge>
                           </div>
-                          <Badge variant={
-                            bag.review?.status === 'approved' ? 'default' :
-                            bag.review?.status === 'disapproved' ? 'destructive' : 'secondary'
-                          }>
-                            {bag.review?.status || 'Pending'}
-                          </Badge>
-                        </div>
-                        
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <p>Type: {bag.bag_type === 'organic' ? 'Organic (5 pts)' : 'Recyclable (15 pts)'}</p>
-                          <p>Activated: {new Date(bag.activated_at).toLocaleString()}</p>
                           
-                          {bag.review && (
-                            <>
-                              <p>Reviewed by: {bag.review.collector_name}</p>
-                              <p>Reviewed at: {new Date(bag.review.reviewed_at).toLocaleString()}</p>
-                              {bag.review.status === 'approved' && (
-                                <p className="text-primary font-medium">+{bag.review.points_awarded} points</p>
-                              )}
-                              {bag.review.disapproval_reason && (
-                                <p className="text-destructive">Reason: {bag.review.disapproval_reason}</p>
-                              )}
-                              {bag.review.notes && (
-                                <p>Notes: {bag.review.notes}</p>
-                              )}
-                            </>
-                          )}
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Type: <span className={`font-medium ${typeInfo.textColor}`}>{typeInfo.label} ({typeInfo.points} pts)</span></p>
+                            <p>Activated: {new Date(bag.activated_at).toLocaleString()}</p>
+                            
+                            {bag.review && (
+                              <>
+                                <p>Reviewed by: {bag.review.collector_name}</p>
+                                <p>Reviewed at: {new Date(bag.review.reviewed_at).toLocaleString()}</p>
+                                {bag.review.status === 'approved' && (
+                                  <p className={`font-medium ${typeInfo.textColor}`}>+{bag.review.points_awarded} points</p>
+                                )}
+                                {bag.review.status === 'disapproved' && (
+                                  <p className="text-destructive font-medium">0 points</p>
+                                )}
+                                {bag.review.disapproval_reason && (
+                                  <p className="text-destructive">Reason: {bag.review.disapproval_reason}</p>
+                                )}
+                                {bag.review.notes && (
+                                  <p>Notes: {bag.review.notes}</p>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <p className="text-center text-muted-foreground py-4">No bags activated yet</p>
                   )
                 ) : (
                   reviewActivities.length > 0 ? (
-                    reviewActivities.map(review => (
-                      <div key={review.id} className="border rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {review.bag_type === 'organic' ? (
-                              <Trash2 className="w-4 h-4 text-amber-600" />
-                            ) : (
-                              <Leaf className="w-4 h-4 text-primary" />
-                            )}
-                            <span className="text-sm font-mono">{review.qr_code}</span>
+                    reviewActivities.map(review => {
+                      const getBagTypeInfo = () => {
+                        if (review.qr_code.startsWith('WWS') || review.bag_type === 'residual') {
+                          return { label: 'Residual', points: 10, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
+                        } else if (review.qr_code.startsWith('WWO') || review.bag_type === 'organic') {
+                          return { label: 'Organic', points: 5, color: 'bg-gray-800', textColor: 'text-gray-800', Icon: Trash2 };
+                        }
+                        return { label: 'Recyclable', points: 15, color: 'bg-primary', textColor: 'text-primary', Icon: Leaf };
+                      };
+                      const typeInfo = getBagTypeInfo();
+                      
+                      return (
+                        <div key={review.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('primary') ? 'hsl(var(--primary))' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#1f2937' }}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${typeInfo.color}`}>
+                                <typeInfo.Icon className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-sm font-mono">{review.qr_code}</span>
+                            </div>
+                            <Badge variant={review.status === 'approved' ? 'default' : 'destructive'}>
+                              {review.status}
+                            </Badge>
                           </div>
-                          <Badge variant={review.status === 'approved' ? 'default' : 'destructive'}>
-                            {review.status}
-                          </Badge>
+                          
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Household: {review.household_name}</p>
+                            <p>Type: <span className={`font-medium ${typeInfo.textColor}`}>{typeInfo.label}</span></p>
+                            <p>Reviewed: {new Date(review.reviewed_at).toLocaleString()}</p>
+                            {review.status === 'approved' && (
+                              <p className={`font-medium ${typeInfo.textColor}`}>Awarded: +{review.points_awarded} points</p>
+                            )}
+                            {review.status === 'disapproved' && (
+                              <p className="text-destructive font-medium">Awarded: 0 points</p>
+                            )}
+                            {review.disapproval_reason && (
+                              <p className="text-destructive">Reason: {review.disapproval_reason}</p>
+                            )}
+                            {review.notes && (
+                              <p>Notes: {review.notes}</p>
+                            )}
+                          </div>
                         </div>
-                        
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <p>Household: {review.household_name}</p>
-                          <p>Type: {review.bag_type === 'organic' ? 'Organic' : 'Recyclable'}</p>
-                          <p>Reviewed: {new Date(review.reviewed_at).toLocaleString()}</p>
-                          {review.status === 'approved' && (
-                            <p className="text-primary font-medium">Awarded: +{review.points_awarded} points</p>
-                          )}
-                          {review.disapproval_reason && (
-                            <p className="text-destructive">Reason: {review.disapproval_reason}</p>
-                          )}
-                          {review.notes && (
-                            <p>Notes: {review.notes}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <p className="text-center text-muted-foreground py-4">No reviews yet</p>
                   )

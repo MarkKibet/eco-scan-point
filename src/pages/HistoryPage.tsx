@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, Clock, Package, ChevronLeft } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Package, ChevronLeft, Leaf, Trash2, AlertTriangle } from 'lucide-react';
 
 interface BagWithReview {
   id: string;
@@ -94,6 +94,17 @@ export default function HistoryPage() {
     }
   };
 
+  const getBagTypeInfo = (qrCode: string) => {
+    if (qrCode.startsWith('WWR')) {
+      return { type: 'Recyclable', color: 'bg-primary', textColor: 'text-primary', icon: Leaf, points: 15 };
+    } else if (qrCode.startsWith('WWO')) {
+      return { type: 'Organic', color: 'bg-gray-800', textColor: 'text-gray-800', icon: Trash2, points: 5 };
+    } else if (qrCode.startsWith('WWS')) {
+      return { type: 'Residual', color: 'bg-destructive', textColor: 'text-destructive', icon: AlertTriangle, points: 10 };
+    }
+    return { type: 'Unknown', color: 'bg-muted', textColor: 'text-muted-foreground', icon: Package, points: 0 };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -124,41 +135,58 @@ export default function HistoryPage() {
             <p className="text-muted-foreground text-sm">Activate your first bag to see it here</p>
           </div>
         ) : (
-          bags.map((bag) => (
-            <Card key={bag.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="font-mono text-sm text-foreground">{bag.qr_code}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Activated {new Date(bag.activated_at).toLocaleDateString()}
-                    </p>
-                    {bag.review?.notes && (
-                      <p className="text-xs text-muted-foreground mt-2 italic">
-                        Note: "{bag.review.notes}"
+          bags.map((bag) => {
+            const bagTypeInfo = getBagTypeInfo(bag.qr_code);
+            const BagIcon = bagTypeInfo.icon;
+            return (
+              <Card key={bag.id} className={`border-l-4`} style={{ borderLeftColor: bagTypeInfo.color.includes('primary') ? 'hsl(var(--primary))' : bagTypeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#1f2937' }}>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${bagTypeInfo.color}`}>
+                          <BagIcon className="w-3 h-3 text-white" />
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${bagTypeInfo.color} text-white`}>
+                          {bagTypeInfo.type} ({bagTypeInfo.points} pts)
+                        </span>
+                      </div>
+                      <p className="font-mono text-sm text-foreground">{bag.qr_code}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Activated {new Date(bag.activated_at).toLocaleDateString()}
                       </p>
-                    )}
-                    {bag.review?.disapproval_reason && (
-                      <p className="text-xs text-destructive mt-2">
-                        Reason: {bag.review.disapproval_reason}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bag.status)}`}>
-                      {getStatusIcon(bag.status)}
-                      <span>{getStatusText(bag.status)}</span>
+                      {bag.review?.notes && (
+                        <p className="text-xs text-muted-foreground mt-2 italic">
+                          Note: "{bag.review.notes}"
+                        </p>
+                      )}
+                      {bag.review?.disapproval_reason && (
+                        <p className="text-xs text-destructive mt-2">
+                          Reason: {bag.review.disapproval_reason}
+                        </p>
+                      )}
                     </div>
-                    {bag.status === 'approved' && bag.review && (
-                      <span className="text-sm font-semibold text-primary">
-                        +{bag.review.points_awarded} pts
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end gap-2">
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bag.status)}`}>
+                        {getStatusIcon(bag.status)}
+                        <span>{getStatusText(bag.status)}</span>
+                      </div>
+                      {bag.status === 'approved' && bag.review && (
+                        <span className={`text-sm font-semibold ${bagTypeInfo.textColor}`}>
+                          +{bag.review.points_awarded} pts
+                        </span>
+                      )}
+                      {bag.status === 'disapproved' && (
+                        <span className="text-sm font-semibold text-destructive">
+                          0 pts
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>
