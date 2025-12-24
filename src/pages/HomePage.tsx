@@ -22,6 +22,7 @@ export default function HomePage() {
   const isCollector = role === 'collector';
   const isAdmin = role === 'admin';
   const isHousehold = role === 'household';
+  const isReceiver = role === 'receiver';
 
   const handleLogout = async () => {
     await signOut();
@@ -42,7 +43,7 @@ export default function HomePage() {
             <h1 className="text-lg font-bold text-foreground">Hello, {profile?.name || 'User'}</h1>
             <p className="text-sm text-muted-foreground capitalize">{role || 'Loading...'}</p>
           </div>
-          {(isHousehold || isCollector) && (
+          {(isHousehold || isCollector || isReceiver) && (
             <Dialog open={showGuide} onOpenChange={setShowGuide}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -139,6 +140,27 @@ export default function HomePage() {
             </>
           )}
 
+          {/* Receiver actions */}
+          {isReceiver && (
+            <>
+              <Card className="cursor-pointer hover:border-amber-500 transition-colors" onClick={() => navigate('/scan')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-2">
+                    <Scan className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">Verify Review</p>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:border-amber-500 transition-colors" onClick={() => navigate('/reviews')}>
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-2">
+                    <History className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <p className="font-medium text-foreground text-sm">My Verifications</p>
+                </CardContent>
+              </Card>
+            </>
+
           {/* Household actions */}
           {isHousehold && (
             <>
@@ -170,7 +192,7 @@ export default function HomePage() {
           )}
         </div>
       </div>
-      {(isHousehold || isCollector) && <ScanButton />}
+      {(isHousehold || isCollector || isReceiver) && <ScanButton />}
     </div>
   );
 }

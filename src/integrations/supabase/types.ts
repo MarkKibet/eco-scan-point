@@ -112,6 +112,41 @@ export type Database = {
         }
         Relationships: []
       }
+      receiver_reviews: {
+        Row: {
+          bag_review_id: string
+          id: string
+          notes: string | null
+          receiver_id: string
+          reviewed_at: string | null
+          status: string
+        }
+        Insert: {
+          bag_review_id: string
+          id?: string
+          notes?: string | null
+          receiver_id: string
+          reviewed_at?: string | null
+          status: string
+        }
+        Update: {
+          bag_review_id?: string
+          id?: string
+          notes?: string | null
+          receiver_id?: string
+          reviewed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receiver_reviews_bag_review_id_fkey"
+            columns: ["bag_review_id"]
+            isOneToOne: false
+            referencedRelation: "bag_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -144,7 +179,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "household" | "collector" | "admin"
+      app_role: "household" | "collector" | "admin" | "receiver"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -272,7 +307,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["household", "collector", "admin"],
+      app_role: ["household", "collector", "admin", "receiver"],
     },
   },
 } as const
