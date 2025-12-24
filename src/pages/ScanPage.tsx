@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown, Upload, ChevronLeft, Truck, LogIn } from 'lucide-react';
+import { Camera, X, CheckCircle, AlertCircle, User, MapPin, ThumbsUp, ThumbsDown, Upload, ChevronLeft, Truck, LogIn, Package, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type ScanState = 'ready' | 'scanning' | 'success' | 'error' | 'already-activated' | 'review';
+type ScanState = 'ready' | 'scanning' | 'success' | 'error' | 'already-activated' | 'review' | 'receiver-review';
 
 interface BagDetails {
   id: string;
@@ -16,10 +16,26 @@ interface BagDetails {
   household_id: string;
   activated_at: string;
   status: string;
+  points_value: number;
   household?: {
     name: string;
     location: string | null;
     total_points: number;
+  };
+}
+
+interface CollectorReviewDetails {
+  id: string;
+  bag_id: string;
+  collector_id: string;
+  status: string;
+  points_awarded: number;
+  notes: string | null;
+  reviewed_at: string;
+  bag: BagDetails;
+  collector: {
+    name: string;
+    location: string | null;
   };
 }
 
@@ -53,6 +69,8 @@ export default function ScanPage() {
   const [scanState, setScanState] = useState<ScanState>('ready');
   const [manualCode, setManualCode] = useState('');
   const [bagDetails, setBagDetails] = useState<BagDetails | null>(null);
+  const [collectorReview, setCollectorReview] = useState<CollectorReviewDetails | null>(null);
+  const [receiverNotes, setReceiverNotes] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
   const [disapprovalReason, setDisapprovalReason] = useState('');
   const [customReason, setCustomReason] = useState('');
@@ -64,6 +82,7 @@ export default function ScanPage() {
   const processedUrlCode = useRef(false);
 
   const isCollector = role === 'collector';
+  const isReceiver = role === 'receiver';
 
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
@@ -227,10 +246,107 @@ export default function ScanPage() {
     // Extract the bag code from URL or use as-is
     const code = extractBagCode(input);
     
-    if (isCollector) {
+    if (isReceiver) {
+      await handleReceiverScan(code);
+    } else if (isCollector) {
       await handleCollectorScan(code);
     } else {
       await handleHouseholdScan(code);
+    }
+  };
+
+  const handleReceiverScan = async (code: string) => {
+    // First find the bag
+    const { data: bag, error: bagError } = await supabase
+      .from('bags')
+      .select('*')
+      .eq('qr_code', code)
+      .maybeSingle();
+
+    if (bagError || !bag) {
+      setScanState('error');
+      toast.error('Bag not found');
+      return;
+    }
+
+    // Check if it's been reviewed by a collector
+    if (bag.status === 'activated') {
+      setScanState('error');
+      toast.error('This bag has not been reviewed by a collector yet');
+      return;
+    }
+
+    // Check if already reviewed by a receiver
+    if (bag.status === 'receiver_approved' || bag.status === 'receiver_disapproved') {
+      setScanState('error');
+      toast.error(`This bag has already been verified by a receiver (${bag.status.replace('receiver_', '')})`);
+      return;
+    }
+
+    // Get the collector's review
+    const { data: review, error: reviewError } = await supabase
+      .from('bag_reviews')
+      .select('*')
+      .eq('bag_id', bag.id)
+      .maybeSingle();
+
+    if (reviewError || !review) {
+      setScanState('error');
+      toast.error('No collector review found for this bag');
+      return;
+    }
+
+    // Get household info
+    const { data: householdProfile } = await supabase
+      .from('profiles')
+      .select('name, location, total_points')
+      .eq('id', bag.household_id)
+      .maybeSingle();
+
+    // Get collector info
+    const { data: collectorProfile } = await supabase
+      .from('profiles')
+      .select('name, location')
+      .eq('id', review.collector_id)
+      .maybeSingle();
+
+    setCollectorReview({
+      ...review,
+      bag: {
+        ...bag,
+        household: householdProfile || undefined
+      },
+      collector: collectorProfile || { name: 'Unknown', location: null }
+    });
+    setScanState('receiver-review');
+  };
+
+  const handleReceiverReview = async (approved: boolean) => {
+    if (!collectorReview || !user) return;
+
+    setSubmitting(true);
+
+    const { error } = await supabase
+      .from('receiver_reviews')
+      .insert({
+        bag_review_id: collectorReview.id,
+        receiver_id: user.id,
+        status: approved ? 'approved' : 'disapproved',
+        notes: receiverNotes || null
+      });
+
+    setSubmitting(false);
+
+    if (error) {
+      console.error('Error submitting receiver review:', error);
+      toast.error('Failed to submit verification');
+    } else {
+      if (approved) {
+        toast.success('Collector review verified! Bag confirmed.');
+      } else {
+        toast.success('Collector review rejected. Points removed from household.');
+      }
+      resetScan();
     }
   };
 
@@ -290,8 +406,10 @@ export default function ScanPage() {
     await stopScanner();
     setScanState('ready');
     setBagDetails(null);
+    setCollectorReview(null);
     setManualCode('');
     setReviewNotes('');
+    setReceiverNotes('');
     setDisapprovalReason('');
     setCustomReason('');
     setScannedCode('');
@@ -311,7 +429,7 @@ export default function ScanPage() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <h1 className="text-lg font-semibold">
-          {isCollector ? 'Review Bag' : 'Activate Bag'}
+          {isReceiver ? 'Verify Review' : isCollector ? 'Review Bag' : 'Activate Bag'}
         </h1>
         <div className="w-10" />
       </header>
@@ -588,6 +706,87 @@ export default function ScanPage() {
                 </div>
               );
             })()}
+          </div>
+        )}
+
+        {scanState === 'receiver-review' && collectorReview && (
+          <div className="space-y-4 py-4 animate-slide-up">
+            <Card className="border-amber-500/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <ClipboardCheck className="w-5 h-5 text-amber-600" />
+                  <h3 className="font-semibold text-foreground">Collector Review Details</h3>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Collector:</span>
+                    <span className="font-medium">{collectorReview.collector.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Decision:</span>
+                    <span className={`font-medium ${collectorReview.status === 'approved' ? 'text-primary' : 'text-destructive'}`}>
+                      {collectorReview.status === 'approved' ? 'Approved' : 'Disapproved'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Points:</span>
+                    <span className="font-medium text-primary">+{collectorReview.points_awarded}</span>
+                  </div>
+                  {collectorReview.notes && (
+                    <div>
+                      <span className="text-muted-foreground">Notes: </span>
+                      <span>{collectorReview.notes}</span>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-foreground mb-3">Bag & Household Info</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span>{collectorReview.bag.household?.name || 'Unknown'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Bag Code: </span>
+                    <span className="font-mono">{collectorReview.bag.qr_code}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Verification Notes (optional)</label>
+              <textarea
+                value={receiverNotes}
+                onChange={(e) => setReceiverNotes(e.target.value)}
+                placeholder="Add notes about your verification..."
+                className="w-full h-20 px-3 py-2 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => handleReceiverReview(false)}
+                disabled={submitting}
+                className="flex-1 border-destructive text-destructive hover:bg-destructive/10"
+              >
+                <ThumbsDown className="w-4 h-4 mr-2" />
+                Reject (Remove Points)
+              </Button>
+              <Button
+                onClick={() => handleReceiverReview(true)}
+                disabled={submitting}
+                className="flex-1 bg-amber-600 hover:bg-amber-700"
+              >
+                <ThumbsUp className="w-4 h-4 mr-2" />
+                Confirm Review
+              </Button>
+            </div>
           </div>
         )}
 

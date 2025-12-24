@@ -2,7 +2,7 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'household' | 'collector' | 'admin';
+type AppRole = 'household' | 'collector' | 'admin' | 'receiver';
 
 interface Profile {
   id: string;
@@ -22,6 +22,8 @@ interface AuthContextType {
   signInWithPhone: (phone: string, metadata: { name: string; location?: string; role: AppRole }) => Promise<{ error: Error | null }>;
   signInCollector: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUpCollector: (email: string, password: string, metadata: { name: string; location?: string }) => Promise<{ error: Error | null }>;
+  signInReceiver: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUpReceiver: (email: string, password: string, metadata: { name: string; location?: string }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -164,6 +166,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
+  // Receiver sign in with email + password
+  const signInReceiver = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      return { error: error as Error };
+    }
+
+    return { error: null };
+  };
+
+  // Receiver sign up with email + password
+  const signUpReceiver = async (
+    email: string,
+    password: string,
+    metadata: { name: string; location?: string }
+  ) => {
+    const redirectUrl = `${window.location.origin}/`;
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          ...metadata,
+          role: 'receiver'
+        }
+      }
+    });
+
+    if (error) {
+      return { error: error as Error };
+    }
+
+    return { error: null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -183,6 +226,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithPhone,
         signInCollector,
         signUpCollector,
+        signInReceiver,
+        signUpReceiver,
         signOut
       }}
     >

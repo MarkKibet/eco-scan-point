@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Recycle, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Recycle, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield, Mail, Lock, Eye, EyeOff, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { supabase } from '@/integrations/supabase/client';
 
-type AuthStep = 'welcome' | 'phone' | 'otp' | 'details' | 'collector-auth';
+type AuthStep = 'welcome' | 'phone' | 'otp' | 'details' | 'collector-auth' | 'receiver-auth';
 type AuthMode = 'signin' | 'signup';
+type UserType = 'collector' | 'receiver';
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { signInWithPhone, signInCollector, signUpCollector, user, isLoading } = useAuth();
+  const { signInWithPhone, signInCollector, signUpCollector, signInReceiver, signUpReceiver, user, isLoading } = useAuth();
   const [step, setStep] = useState<AuthStep>('welcome');
   const [authMode, setAuthMode] = useState<AuthMode>('signin');
   const [phone, setPhone] = useState('');
@@ -94,6 +95,11 @@ export default function AuthPage() {
     setAuthMode('signin');
   };
 
+  const handleReceiverSelect = () => {
+    setStep('receiver-auth');
+    setAuthMode('signin');
+  };
+
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length >= 10) {
@@ -165,6 +171,10 @@ export default function AuthPage() {
     return email.toLowerCase().endsWith('@wastewise.com');
   };
 
+  const validateReceiverEmail = (email: string) => {
+    return email.toLowerCase().endsWith('@takatrace.com');
+  };
+
   const handleCollectorAuth = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -207,6 +217,67 @@ export default function AuthPage() {
       }
 
       const { error } = await signUpCollector(email, password, {
+        name: name.trim(),
+        location: location.trim() || undefined
+      });
+
+      setSubmitting(false);
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast.error('This email is already registered');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.success('Account created! Welcome to TakaTrace!');
+        navigate('/');
+      }
+    }
+  };
+
+  const handleReceiverAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email.trim() || !password.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (!validateReceiverEmail(email)) {
+      toast.error('Receivers must use a @takatrace.com email');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setSubmitting(true);
+
+    if (authMode === 'signin') {
+      const { error } = await signInReceiver(email, password);
+      setSubmitting(false);
+
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Invalid email or password');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.success('Welcome back to TakaTrace!');
+        navigate('/');
+      }
+    } else {
+      if (!name.trim()) {
+        toast.error('Please enter your name');
+        setSubmitting(false);
+        return;
+      }
+
+      const { error } = await signUpReceiver(email, password, {
         name: name.trim(),
         location: location.trim() || undefined
       });
@@ -299,6 +370,7 @@ export default function AuthPage() {
             {step === 'otp' && 'Verify your phone number'}
             {step === 'details' && 'Complete your profile'}
             {step === 'collector-auth' && (authMode === 'signin' ? 'Sign in to your account' : 'Create your account')}
+            {step === 'receiver-auth' && (authMode === 'signin' ? 'Sign in to your account' : 'Create your account')}
           </p>
         </div>
 
@@ -336,9 +408,25 @@ export default function AuthPage() {
                   </div>
                   <div className="flex-1 text-left">
                     <h3 className="font-semibold">Garbage Collector</h3>
-                    <p className="text-sm text-muted-foreground">TakaTrace employee</p>
+                    <p className="text-sm text-muted-foreground">Collect & review bags</p>
                   </div>
                   <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-teal-600 transition-colors" />
+                </div>
+              </button>
+
+              <button
+                onClick={handleReceiverSelect}
+                className="w-full p-6 rounded-xl border-2 border-input hover:border-amber-500 hover:bg-amber-50 transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                    <Package className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-semibold">Garbage Receiver</h3>
+                    <p className="text-sm text-muted-foreground">Verify collector reviews</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-600 transition-colors" />
                 </div>
               </button>
             </CardContent>
@@ -617,6 +705,131 @@ export default function AuthPage() {
                   type="submit"
                   disabled={submitting}
                   className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white"
+                >
+                  {submitting ? 'Please wait...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
+                  {!submitting && <ArrowRight className="w-5 h-5 ml-2" />}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'receiver-auth' && (
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <button
+                onClick={() => setStep('welcome')}
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-sm"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </button>
+
+              <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <Package className="w-5 h-5 text-amber-600" />
+                </div>
+                <span className="font-medium">Garbage Receiver</span>
+              </div>
+
+              <div className="flex gap-2 p-1 bg-muted rounded-lg">
+                <button
+                  onClick={() => setAuthMode('signin')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    authMode === 'signin'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => setAuthMode('signup')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    authMode === 'signup'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  Sign Up
+                </button>
+              </div>
+
+              <form onSubmit={handleReceiverAuth} className="space-y-4">
+                {authMode === 'signup' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Your Name *</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Enter your name"
+                        className="w-full h-11 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Work Email *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@takatrace.com"
+                      className="w-full h-11 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Must end with @takatrace.com
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter password"
+                      className="w-full h-11 pl-10 pr-10 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {authMode === 'signup' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Location (optional)</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="City or facility location"
+                        className="w-full h-11 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white"
                 >
                   {submitting ? 'Please wait...' : (authMode === 'signin' ? 'Sign In' : 'Create Account')}
                   {!submitting && <ArrowRight className="w-5 h-5 ml-2" />}
