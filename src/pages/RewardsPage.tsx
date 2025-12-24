@@ -184,7 +184,11 @@ export default function RewardsPage() {
   };
 
   const handleConfirmRedeem = async () => {
-    if (!selectedReward || !profile || !user) return;
+    if (!selectedReward || !profile || !user) {
+      console.log('Missing data:', { selectedReward: !!selectedReward, profile: !!profile, user: !!user });
+      toast.error('Please log in to redeem rewards');
+      return;
+    }
     if (!validateInput()) return;
 
     if (userPoints < selectedReward.pointsCost) {
@@ -198,11 +202,17 @@ export default function RewardsPage() {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Deduct points from database
-    const newPoints = userPoints - selectedReward.pointsCost;
-    const { error } = await supabase
+    const newPoints = Math.max(0, userPoints - selectedReward.pointsCost);
+    
+    console.log('Attempting to update points:', { userId: user.id, currentPoints: userPoints, newPoints, cost: selectedReward.pointsCost });
+    
+    const { data, error } = await supabase
       .from('profiles')
       .update({ total_points: newPoints })
-      .eq('id', user.id);
+      .eq('id', user.id)
+      .select();
+
+    console.log('Update result:', { data, error });
 
     if (error) {
       console.error('Error deducting points:', error);
@@ -211,8 +221,16 @@ export default function RewardsPage() {
       return;
     }
 
+    if (!data || data.length === 0) {
+      console.error('No rows updated - possible RLS issue');
+      toast.error('Failed to update points. Please try again.');
+      setStep('confirm');
+      return;
+    }
+
     // Update local state
     setUserPoints(newPoints);
+    toast.success(`${selectedReward.pointsCost} points deducted successfully!`);
 
     // Generate mock confirmation
     const code = generateMockCode(selectedReward.category);
