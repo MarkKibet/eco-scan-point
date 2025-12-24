@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, Printer, Plus, Trash2, Download, ShieldAlert, Leaf } from 'lucide-react';
+import { ChevronLeft, Printer, Plus, Trash2, Download, ShieldAlert, Leaf, Package, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-
+import { Input } from '@/components/ui/input';
+import JSZip from 'jszip';
 interface QRCode {
   id: string;
   code: string;
@@ -34,8 +35,10 @@ export default function QRGeneratorPage() {
   const { role } = useAuth();
   const [qrCodes, setQrCodes] = useState<QRCode[]>([]);
   const [quantity, setQuantity] = useState(6);
+  const [customQuantity, setCustomQuantity] = useState('');
   const [selectedBagType, setSelectedBagType] = useState<'recyclable' | 'biodegradable' | 'residual'>('recyclable');
-
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const isAdmin = role === 'admin';
 
   if (!isAdmin) {
@@ -53,20 +56,44 @@ export default function QRGeneratorPage() {
     );
   }
 
-  const generateCodes = () => {
+  const generateCodes = async () => {
+    const actualQuantity = customQuantity ? parseInt(customQuantity, 10) : quantity;
+    
+    if (isNaN(actualQuantity) || actualQuantity < 1) {
+      toast.error('Please enter a valid quantity');
+      return;
+    }
+    
+    if (actualQuantity > 1000) {
+      toast.error('Maximum 1000 codes at once');
+      return;
+    }
+
+    setIsGenerating(true);
     const points = selectedBagType === 'recyclable' ? 15 : selectedBagType === 'biodegradable' ? 5 : 1;
     const newCodes: QRCode[] = [];
-    for (let i = 0; i < quantity; i++) {
+    
+    // Generate in batches to avoid blocking UI
+    const batchSize = 100;
+    for (let i = 0; i < actualQuantity; i++) {
       newCodes.push({
         id: crypto.randomUUID(),
         code: generateUniqueCode(selectedBagType),
         bagType: selectedBagType,
         points
       });
+      
+      // Yield to UI every batch
+      if (i > 0 && i % batchSize === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
     }
+    
     setQrCodes(prev => [...prev, ...newCodes]);
+    setCustomQuantity('');
     const colorLabel = selectedBagType === 'recyclable' ? 'Blue' : selectedBagType === 'biodegradable' ? 'Green' : 'Red';
-    toast.success(`Generated ${quantity} ${colorLabel} bag codes`);
+    toast.success(`Generated ${actualQuantity} ${colorLabel} bag codes`);
+    setIsGenerating(false);
   };
 
   const removeCode = (id: string) => {
@@ -79,6 +106,126 @@ export default function QRGeneratorPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const generateQRImage = useCallback((qr: QRCode): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const svg = document.getElementById(`qr-${qr.id}`) as unknown as SVGSVGElement;
+      
+      if (!svg) {
+        reject(new Error('Could not find QR element'));
+        return;
+      }
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = 300;
+        canvas.height = 420;
+        const ctx = canvas.getContext('2d');
+        
+        if (ctx) {
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          const bagColor = qr.bagType === 'recyclable' ? '#2563EB' : qr.bagType === 'biodegradable' ? '#16A34A' : '#DC2626';
+          const bagLabel = qr.bagType === 'recyclable' ? 'RECYCLABLES' : qr.bagType === 'biodegradable' ? 'BIODEGRADABLE' : 'RESIDUAL';
+          const bagPoints = qr.bagType === 'recyclable' ? '15 Points' : qr.bagType === 'biodegradable' ? '5 Points' : '1 Point';
+          
+          ctx.fillStyle = bagColor;
+          ctx.font = 'bold 20px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('WasteWise', canvas.width / 2, 30);
+          
+          ctx.font = 'bold 14px Arial';
+          ctx.fillText(bagLabel, canvas.width / 2, 52);
+          
+          ctx.drawImage(img, 50, 70, 200, 200);
+          
+          ctx.fillStyle = '#666';
+          ctx.font = '11px monospace';
+          ctx.fillText(qr.code, canvas.width / 2, 295);
+          
+          ctx.fillStyle = bagColor;
+          ctx.font = 'bold 14px Arial';
+          ctx.fillText(bagPoints, canvas.width / 2, 320);
+          
+          ctx.fillStyle = '#888';
+          ctx.font = '10px Arial';
+          ctx.fillText('Scan to activate bag', canvas.width / 2, 345);
+          
+          canvas.toBlob((blob) => {
+            URL.revokeObjectURL(svgUrl);
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to create blob'));
+            }
+          }, 'image/png');
+        } else {
+          reject(new Error('Could not get canvas context'));
+        }
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = svgUrl;
+    });
+  }, []);
+
+  const downloadAllAsZip = async () => {
+    if (qrCodes.length === 0) return;
+    
+    setIsDownloadingAll(true);
+    toast.info(`Preparing ${qrCodes.length} QR codes for download...`);
+    
+    try {
+      const zip = new JSZip();
+      const folders: Record<string, JSZip> = {
+        recyclable: zip.folder('recyclable')!,
+        biodegradable: zip.folder('biodegradable')!,
+        residual: zip.folder('residual')!,
+      };
+      
+      let processed = 0;
+      const batchSize = 10;
+      
+      for (let i = 0; i < qrCodes.length; i += batchSize) {
+        const batch = qrCodes.slice(i, i + batchSize);
+        
+        await Promise.all(batch.map(async (qr) => {
+          try {
+            const blob = await generateQRImage(qr);
+            const filename = `${qr.code}.png`;
+            folders[qr.bagType].file(filename, blob);
+            processed++;
+          } catch (error) {
+            console.error(`Failed to generate QR for ${qr.code}:`, error);
+          }
+        }));
+        
+        // Update progress
+        if (processed % 50 === 0) {
+          toast.info(`Processing: ${processed}/${qrCodes.length} codes...`);
+        }
+      }
+      
+      const content = await zip.generateAsync({ type: 'blob' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = `wastewise-qrcodes-${new Date().toISOString().split('T')[0]}.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      
+      toast.success(`Downloaded ${processed} QR codes as ZIP!`);
+    } catch (error) {
+      console.error('Error creating ZIP:', error);
+      toast.error('Failed to create ZIP file');
+    } finally {
+      setIsDownloadingAll(false);
+    }
   };
 
   const downloadSingleQR = (qr: QRCode) => {
@@ -212,28 +359,62 @@ export default function QRGeneratorPage() {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-foreground">Quantity:</label>
-              <select
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                className="h-9 px-3 rounded-lg border border-input bg-background text-foreground"
-              >
-                <option value={3}>3 codes</option>
-                <option value={6}>6 codes</option>
-                <option value={9}>9 codes</option>
-                <option value={12}>12 codes</option>
-              </select>
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground block">Quantity:</label>
+              <div className="flex flex-wrap gap-2">
+                {[6, 12, 25, 50, 100, 250, 500].map((num) => (
+                  <button
+                    key={num}
+                    onClick={() => {
+                      setQuantity(num);
+                      setCustomQuantity('');
+                    }}
+                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-all ${
+                      quantity === num && !customQuantity
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">or custom:</span>
+                <Input
+                  type="number"
+                  placeholder="Enter amount (max 1000)"
+                  value={customQuantity}
+                  onChange={(e) => {
+                    setCustomQuantity(e.target.value);
+                  }}
+                  className="w-40"
+                  min={1}
+                  max={1000}
+                />
+              </div>
             </div>
-            
+
             <div className="flex gap-2 flex-wrap">
-              <Button onClick={generateCodes}>
-                <Plus className="w-4 h-4 mr-2" />
-                Generate Codes
+              <Button onClick={generateCodes} disabled={isGenerating}>
+                {isGenerating ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
+                {isGenerating ? 'Generating...' : `Generate ${customQuantity || quantity} Codes`}
               </Button>
               
               {qrCodes.length > 0 && (
                 <>
+                  <Button variant="outline" onClick={downloadAllAsZip} disabled={isDownloadingAll}>
+                    {isDownloadingAll ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Package className="w-4 h-4 mr-2" />
+                    )}
+                    {isDownloadingAll ? 'Creating ZIP...' : 'Download All (ZIP)'}
+                  </Button>
                   <Button variant="outline" onClick={handlePrint}>
                     <Printer className="w-4 h-4 mr-2" />
                     Print Stickers
