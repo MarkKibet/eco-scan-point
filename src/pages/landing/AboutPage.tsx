@@ -49,12 +49,6 @@ const team = [
     bio: 'Civil & Structural Engineer, 5th Year at Moi University. Operations expert driving community engagement.',
     initials: 'JJ',
   },
-  {
-    name: 'Mark Kibet',
-    role: 'CTO',
-    bio: 'Environmental Lawyer & Software Engineer. Building technology for environmental justice.',
-    initials: 'MK',
-  },
 ];
 
 export default function AboutPage() {
@@ -101,9 +95,8 @@ export default function AboutPage() {
                 </p>
                 <p className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
                   Founded in 2025 in Eldoret, Uasin Gishu County, by a team of passionate 
-                  engineers and legal experts from Moi University, we set out to create a 
-                  solution that would make waste segregation rewarding, trackable, and 
-                  accessible to everyone.
+                  engineers from Moi University, we set out to create a solution that would 
+                  make waste segregation rewarding, trackable, and accessible to everyone.
                 </p>
                 <p className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
                   Today, we are proud to serve 100 households in Uasin Gishu County, with 
@@ -204,7 +197,7 @@ export default function AboutPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {team.map((member, index) => (
               <Card 
                 key={index} 
