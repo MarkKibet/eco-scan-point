@@ -18,7 +18,7 @@ interface QRCode {
 const generateUniqueCode = (bagType: 'recyclable' | 'biodegradable' | 'residual') => {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 8);
-  const prefix = bagType === 'recyclable' ? 'WWR' : bagType === 'biodegradable' ? 'WWO' : 'WWS';
+  const prefix = bagType === 'recyclable' ? 'TTR' : bagType === 'biodegradable' ? 'TTO' : 'TTS';
   return `${prefix}-${timestamp}-${random}`.toUpperCase();
 };
 
@@ -136,10 +136,10 @@ export default function QRGeneratorPage() {
           const bagLabel = qr.bagType === 'recyclable' ? 'RECYCLABLES' : qr.bagType === 'biodegradable' ? 'BIODEGRADABLE' : 'RESIDUAL';
           const bagPoints = qr.bagType === 'recyclable' ? '15 Points' : qr.bagType === 'biodegradable' ? '5 Points' : '1 Point';
           
-          ctx.fillStyle = bagColor;
-          ctx.font = 'bold 20px Arial';
-          ctx.textAlign = 'center';
-          ctx.fillText('WasteWise', canvas.width / 2, 30);
+        ctx.fillStyle = bagColor;
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('TakaTrace', canvas.width / 2, 30);
           
           ctx.font = 'bold 14px Arial';
           ctx.fillText(bagLabel, canvas.width / 2, 52);
@@ -215,7 +215,7 @@ export default function QRGeneratorPage() {
       const content = await zip.generateAsync({ type: 'blob' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(content);
-      link.download = `wastewise-qrcodes-${new Date().toISOString().split('T')[0]}.zip`;
+      link.download = `takatrace-qrcodes-${new Date().toISOString().split('T')[0]}.zip`;
       link.click();
       URL.revokeObjectURL(link.href);
       
@@ -258,7 +258,7 @@ export default function QRGeneratorPage() {
         ctx.fillStyle = bagColor;
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('WasteWise', canvas.width / 2, 30);
+        ctx.fillText('TakaTrace', canvas.width / 2, 30);
         
         ctx.font = 'bold 14px Arial';
         ctx.fillText(bagLabel, canvas.width / 2, 52);
@@ -278,7 +278,7 @@ export default function QRGeneratorPage() {
         ctx.fillText('Scan to activate bag', canvas.width / 2, 345);
         
         const link = document.createElement('a');
-        link.download = `wastewise-${qr.bagType}-${qr.code}.png`;
+        link.download = `takatrace-${qr.bagType}-${qr.code}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
         
@@ -498,7 +498,7 @@ export default function QRGeneratorPage() {
                 <div className="flex flex-col items-center">
                   <div className="text-center mb-2 print:mb-1">
                     <span className={`text-lg font-bold print:text-sm ${getTextColor()}`}>
-                      WasteWise
+                      TakaTrace
                     </span>
                     <p className={`text-xs font-medium ${getTextColor()}`}>
                       {getLabel()}
