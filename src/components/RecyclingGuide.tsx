@@ -135,20 +135,23 @@ export default function RecyclingGuide({ compact = false }: RecyclingGuideProps)
         </CardContent>
       </Card>
 
-      <Card className="border-destructive/50">
+      <Card className="border-gray-500/50">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <div className="w-8 h-8 bg-destructive rounded-lg flex items-center justify-center">
-              <XCircle className="w-4 h-4 text-destructive-foreground" />
+            <div className="w-8 h-8 bg-gray-900 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+              <Trash2 className="w-4 h-4 text-white" />
             </div>
-            <span className="text-destructive">Not Accepted</span>
+            <div>
+              <span className="text-gray-900 dark:text-gray-300">Residuals - Black Bag</span>
+              <p className="text-xs font-normal text-gray-600 dark:text-gray-400">1 point per approved bag</p>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-2">
             {NON_RECYCLABLE_ITEMS.map((item, i) => (
               <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                <XCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                <Trash2 className="w-3.5 h-3.5 text-gray-900 dark:text-gray-400 flex-shrink-0" />
                 {item}
               </div>
             ))}

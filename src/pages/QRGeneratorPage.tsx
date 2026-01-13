@@ -132,7 +132,7 @@ export default function QRGeneratorPage() {
           ctx.fillStyle = 'white';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           
-          const bagColor = qr.bagType === 'recyclable' ? '#2563EB' : qr.bagType === 'biodegradable' ? '#16A34A' : '#DC2626';
+          const bagColor = qr.bagType === 'recyclable' ? '#2563EB' : qr.bagType === 'biodegradable' ? '#16A34A' : '#1F2937';
           const bagLabel = qr.bagType === 'recyclable' ? 'RECYCLABLES' : qr.bagType === 'biodegradable' ? 'BIODEGRADABLE' : 'RESIDUAL';
           const bagPoints = qr.bagType === 'recyclable' ? '15 Points' : qr.bagType === 'biodegradable' ? '5 Points' : '1 Point';
           
@@ -251,7 +251,7 @@ export default function QRGeneratorPage() {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        const bagColor = qr.bagType === 'recyclable' ? '#2563EB' : qr.bagType === 'biodegradable' ? '#16A34A' : '#DC2626';
+        const bagColor = qr.bagType === 'recyclable' ? '#2563EB' : qr.bagType === 'biodegradable' ? '#16A34A' : '#1F2937';
         const bagLabel = qr.bagType === 'recyclable' ? '♻️ RECYCLABLES' : qr.bagType === 'biodegradable' ? '🌿 BIODEGRADABLE' : '🗑️ RESIDUAL';
         const bagPoints = qr.bagType === 'recyclable' ? '15 Points' : qr.bagType === 'biodegradable' ? '5 Points' : '1 Point';
         
@@ -346,15 +346,15 @@ export default function QRGeneratorPage() {
                   onClick={() => setSelectedBagType('residual')}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     selectedBagType === 'residual'
-                      ? 'border-red-600 bg-red-50 dark:bg-red-950'
-                      : 'border-border hover:border-red-400'
+                      ? 'border-gray-900 bg-gray-100 dark:bg-gray-800'
+                      : 'border-border hover:border-gray-600'
                   }`}
                 >
-                  <div className="w-8 h-8 bg-red-600 rounded-full mx-auto mb-1 flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gray-900 rounded-full mx-auto mb-1 flex items-center justify-center">
                     <Trash2 className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-medium text-red-600">Residual</p>
-                  <p className="text-[10px] text-muted-foreground">Red • 1pt</p>
+                  <p className="text-xs font-medium text-gray-900 dark:text-gray-300">Residual</p>
+                  <p className="text-[10px] text-muted-foreground">Black • 1pt</p>
                 </button>
               </div>
             </div>
@@ -433,7 +433,7 @@ export default function QRGeneratorPage() {
           <div className="flex gap-4 text-sm flex-wrap">
             <span className="text-blue-600 font-medium">🔵 Recyclables: {recyclableCodes.length}</span>
             <span className="text-green-600 font-medium">🟢 Biodegradable: {biodegradableCodes.length}</span>
-            <span className="text-red-600 font-medium">🔴 Residual: {residualCodes.length}</span>
+            <span className="text-gray-900 dark:text-gray-300 font-medium">⚫ Residual: {residualCodes.length}</span>
           </div>
         )}
 
@@ -455,17 +455,17 @@ export default function QRGeneratorPage() {
               const getBorderColor = () => {
                 if (qr.bagType === 'recyclable') return 'border-blue-500/50';
                 if (qr.bagType === 'biodegradable') return 'border-green-500/50';
-                return 'border-red-500/50';
+                return 'border-gray-500/50';
               };
               const getTextColor = () => {
                 if (qr.bagType === 'recyclable') return 'text-blue-600';
                 if (qr.bagType === 'biodegradable') return 'text-green-600';
-                return 'text-red-600';
+                return 'text-gray-900 dark:text-gray-300';
               };
               const getQRColor = () => {
                 if (qr.bagType === 'recyclable') return '#2563EB';
                 if (qr.bagType === 'biodegradable') return '#16A34A';
-                return '#DC2626';
+                return '#1F2937';
               };
               const getLabel = () => {
                 if (qr.bagType === 'recyclable') return '♻️ RECYCLABLES';
