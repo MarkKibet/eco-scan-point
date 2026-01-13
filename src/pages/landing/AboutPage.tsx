@@ -38,24 +38,22 @@ const values = [
 
 const team = [
   {
-    name: 'Dr. Amina Osei',
+    name: 'Shadrack Biwott',
     role: 'CEO & Founder',
-    bio: 'Environmental scientist with 15+ years in waste management research.',
+    bio: 'Civil & Structural Engineer, 5th Year at Moi University. Visionary leader passionate about sustainable waste solutions.',
+    initials: 'SB',
   },
   {
-    name: 'James Mwangi',
+    name: 'Judith Jelagat',
+    role: 'COO & Co-Founder',
+    bio: 'Civil & Structural Engineer, 5th Year at Moi University. Operations expert driving community engagement.',
+    initials: 'JJ',
+  },
+  {
+    name: 'Mark Kibet',
     role: 'CTO',
-    bio: 'Tech innovator passionate about using technology for social good.',
-  },
-  {
-    name: 'Grace Wanjiku',
-    role: 'Head of Operations',
-    bio: 'Expert in logistics and sustainable supply chain management.',
-  },
-  {
-    name: 'David Kimani',
-    role: 'Community Lead',
-    bio: 'Dedicated to building partnerships and community engagement.',
+    bio: 'Environmental Lawyer & Software Engineer. Building technology for environmental justice.',
+    initials: 'MK',
   },
 ];
 
@@ -96,20 +94,21 @@ export default function AboutPage() {
                 Our Story
               </h2>
               <div className="space-y-4 text-muted-foreground">
-                <p>
+                <p className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
                   TakaTrace was born from a simple observation: despite growing awareness about 
-                  recycling, most communities lacked the infrastructure and incentives to properly 
-                  manage their waste.
+                  recycling, most communities in Kenya lacked the infrastructure and incentives 
+                  to properly manage their waste.
                 </p>
-                <p>
-                  Founded in 2023 in Nairobi, Kenya, we set out to create a solution that would 
-                  make waste segregation rewarding, trackable, and accessible to everyone—from 
-                  individual households to large municipalities.
+                <p className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                  Founded in 2025 in Eldoret, Uasin Gishu County, by a team of passionate 
+                  engineers and legal experts from Moi University, we set out to create a 
+                  solution that would make waste segregation rewarding, trackable, and 
+                  accessible to everyone.
                 </p>
-                <p>
-                  Today, we're proud to serve over 50,000 households across East Africa, with 
-                  partnerships spanning multiple counties and organizations. Our vision is to 
-                  become the leading waste traceability platform across the continent.
+                <p className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  Today, we are proud to serve 100 households in Uasin Gishu County, with 
+                  ambitious plans to expand across Kenya. Our vision is to become the leading 
+                  waste traceability platform across East Africa and beyond.
                 </p>
               </div>
             </div>
@@ -120,9 +119,9 @@ export default function AboutPage() {
                   backgroundImage: `url('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80')`,
                 }}
               />
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary rounded-2xl flex items-center justify-center">
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-primary rounded-2xl flex items-center justify-center animate-float shadow-eco-lg">
                 <div className="text-center text-primary-foreground">
-                  <p className="text-3xl font-bold">2023</p>
+                  <p className="text-3xl font-bold">2025</p>
                   <p className="text-sm">Founded</p>
                 </div>
               </div>
@@ -205,12 +204,17 @@ export default function AboutPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {team.map((member, index) => (
-              <Card key={index} className="text-center hover:shadow-card-hover transition-shadow overflow-hidden">
-                <div className="h-48 bg-gradient-to-br from-primary/20 to-eco-leaf/20 flex items-center justify-center">
-                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Users className="w-12 h-12 text-primary/50" />
+              <Card 
+                key={index} 
+                className="text-center hover:shadow-card-hover transition-all duration-500 overflow-hidden group hover:-translate-y-2"
+                style={{ animationDelay: `${index * 0.15}s` }}
+              >
+                <div className="h-48 bg-gradient-to-br from-primary/20 via-eco-leaf/20 to-primary/10 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="w-24 h-24 bg-gradient-to-br from-primary to-eco-leaf rounded-full flex items-center justify-center shadow-eco group-hover:scale-110 transition-transform duration-500">
+                    <span className="text-2xl font-bold text-white">{member.initials}</span>
                   </div>
                 </div>
                 <CardContent className="p-6">
@@ -249,12 +253,16 @@ export default function AboutPage() {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {[
-                { value: '500+', label: 'Tons Diverted' },
-                { value: '2M+', label: 'Bags Tracked' },
-                { value: '50K+', label: 'Active Users' },
-                { value: '25+', label: 'Partner Counties' },
+                { value: '100+', label: 'Households Served' },
+                { value: '500+', label: 'Bags Tracked' },
+                { value: '2025', label: 'Year Founded' },
+                { value: '1', label: 'County (Growing!)' },
               ].map((stat, index) => (
-                <div key={index} className="text-center">
+                <div 
+                  key={index} 
+                  className="text-center animate-fade-in"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
                   <p className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</p>
                   <p className="text-sm text-white/70">{stat.label}</p>
                 </div>
