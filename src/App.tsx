@@ -18,6 +18,14 @@ import TrashScannerPage from "@/pages/TrashScannerPage";
 import FeedbackPage from "@/pages/FeedbackPage";
 import NotFound from "@/pages/NotFound";
 
+// Landing pages
+import WelcomePage from "@/pages/landing/WelcomePage";
+import AboutPage from "@/pages/landing/AboutPage";
+import HowItWorksPage from "@/pages/landing/HowItWorksPage";
+import FeaturesPage from "@/pages/landing/FeaturesPage";
+import FAQPage from "@/pages/landing/FAQPage";
+import ContactPage from "@/pages/landing/ContactPage";
+
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -32,7 +40,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/welcome" replace />;
   }
 
   return <>{children}</>;
@@ -41,7 +49,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function ConditionalBottomNav() {
   const location = useLocation();
   const { user } = useAuth();
-  const hideNavPaths = ['/auth', '/scan', '/qr-generator', '/admin', '/trash-scanner'];
+  const landingPaths = ['/welcome', '/about', '/how-it-works', '/features', '/faq', '/contact'];
+  const hideNavPaths = ['/auth', '/scan', '/qr-generator', '/admin', '/trash-scanner', ...landingPaths];
   const showNav = user && !hideNavPaths.includes(location.pathname);
   
   if (!showNav) return null;
@@ -49,11 +58,40 @@ function ConditionalBottomNav() {
 }
 
 function AppContent() {
+  const { user, isLoading } = useAuth();
+
+  // Redirect logged-in users from landing/auth pages to dashboard
+  const RedirectIfAuthenticated = ({ children }: { children: React.ReactNode }) => {
+    if (isLoading) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
+    if (user) {
+      return <Navigate to="/home" replace />;
+    }
+    return <>{children}</>;
+  };
+
   return (
     <>
       <Routes>
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        {/* Landing pages - accessible without auth */}
+        <Route path="/welcome" element={<RedirectIfAuthenticated><WelcomePage /></RedirectIfAuthenticated>} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/faq" element={<FAQPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        
+        {/* Auth page */}
+        <Route path="/auth" element={<RedirectIfAuthenticated><AuthPage /></RedirectIfAuthenticated>} />
+        
+        {/* Protected app pages */}
+        <Route path="/" element={<Navigate to="/welcome" replace />} />
+        <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path="/scan" element={<ProtectedRoute><ScanPage /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
         <Route path="/rewards" element={<ProtectedRoute><RewardsPage /></ProtectedRoute>} />
