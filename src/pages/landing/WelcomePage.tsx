@@ -50,10 +50,10 @@ const features = [
 ];
 
 const stats = [
-  { value: '50K+', label: 'Active Households' },
-  { value: '2M+', label: 'Bags Tracked' },
-  { value: '500T', label: 'Waste Diverted' },
-  { value: '98%', label: 'Satisfaction Rate' },
+  { value: '100+', label: 'Active Households' },
+  { value: '500+', label: 'Bags Tracked' },
+  { value: '1', label: 'County Served' },
+  { value: '2025', label: 'Founded' },
 ];
 
 const testimonials = [
@@ -142,9 +142,9 @@ export default function WelcomePage() {
                 <Shield className="w-5 h-5 text-primary" />
                 <span>Secure & Private</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 animate-bounce-subtle">
                 <Users className="w-5 h-5 text-primary" />
-                <span>50,000+ Users</span>
+                <span>100+ Households in Eldoret</span>
               </div>
             </div>
           </div>
@@ -152,13 +152,18 @@ export default function WelcomePage() {
 
         {/* Floating Elements */}
         <div className="absolute right-10 top-1/3 hidden lg:block animate-float">
-          <div className="w-20 h-20 rounded-2xl bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-2xl bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 flex items-center justify-center animate-glow-pulse">
             <Recycle className="w-10 h-10 text-blue-600" />
           </div>
         </div>
         <div className="absolute right-32 bottom-1/3 hidden lg:block animate-float" style={{ animationDelay: '1s' }}>
           <div className="w-16 h-16 rounded-xl bg-green-600/20 backdrop-blur-sm border border-green-500/30 flex items-center justify-center">
-            <Leaf className="w-8 h-8 text-green-600" />
+            <Leaf className="w-8 h-8 text-green-600 animate-bounce-subtle" />
+          </div>
+        </div>
+        <div className="absolute right-52 top-1/2 hidden lg:block animate-float" style={{ animationDelay: '2s' }}>
+          <div className="w-14 h-14 rounded-xl bg-amber-500/20 backdrop-blur-sm border border-amber-500/30 flex items-center justify-center">
+            <Gift className="w-7 h-7 text-amber-500" />
           </div>
         </div>
       </section>
@@ -168,7 +173,11 @@ export default function WelcomePage() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
+              <div 
+                key={index} 
+                className="text-center animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
                 <p className="text-3xl md:text-4xl font-bold text-primary mb-1">{stat.value}</p>
                 <p className="text-sm text-muted-foreground">{stat.label}</p>
               </div>
