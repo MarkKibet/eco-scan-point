@@ -591,6 +591,12 @@ export default function ScanPage() {
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground mb-3">Household Details</h3>
                 <div className="space-y-2">
+                  {bagDetails.household?.household_code && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Household ID:</span>
+                      <span className="font-mono font-medium">{bagDetails.household.household_code}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-sm">
                     <User className="w-4 h-4 text-muted-foreground" />
                     <span>{bagDetails.household?.name || 'Unknown'}</span>
