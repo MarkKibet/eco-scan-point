@@ -389,7 +389,8 @@ export default function ScanPage() {
         status: approved ? 'approved' : 'disapproved',
         points_awarded: pointsAwarded,
         notes: reviewNotes || null,
-        disapproval_reason: approved ? null : finalReason
+        disapproval_reason: approved ? null : finalReason,
+        weight_kg: weightKg ? parseFloat(weightKg) : null
       });
 
     setSubmitting(false);
