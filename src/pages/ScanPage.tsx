@@ -233,7 +233,7 @@ export default function ScanPage() {
 
     const { data: householdProfile } = await supabase
       .from('profiles')
-      .select('name, location, total_points')
+      .select('name, location, total_points, household_code')
       .eq('id', bag.household_id)
       .maybeSingle();
 
