@@ -88,6 +88,7 @@ interface UserRecord {
   total_points: number;
   created_at: string;
   role: string;
+  household_code: string | null;
 }
 
 interface BagRecord {
