@@ -46,6 +46,7 @@ interface DashboardStats {
   disapprovedBags: number;
   pendingBags: number;
   totalPointsAwarded: number;
+  totalWeightKg: number;
   recyclableBags: number;
   organicBags: number;
   residualBags: number;
