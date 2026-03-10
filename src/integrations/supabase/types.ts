@@ -24,6 +24,7 @@ export type Database = {
           points_awarded: number | null
           reviewed_at: string | null
           status: string
+          weight_kg: number | null
         }
         Insert: {
           bag_id: string
@@ -34,6 +35,7 @@ export type Database = {
           points_awarded?: number | null
           reviewed_at?: string | null
           status: string
+          weight_kg?: number | null
         }
         Update: {
           bag_id?: string
@@ -44,6 +46,7 @@ export type Database = {
           points_awarded?: number | null
           reviewed_at?: string | null
           status?: string
+          weight_kg?: number | null
         }
         Relationships: [
           {
@@ -121,6 +124,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string | null
+          household_code: string | null
           id: string
           location: string | null
           name: string
@@ -129,6 +133,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          household_code?: string | null
           id: string
           location?: string | null
           name: string
@@ -137,6 +142,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          household_code?: string | null
           id?: string
           location?: string | null
           name?: string
