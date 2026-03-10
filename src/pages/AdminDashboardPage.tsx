@@ -125,6 +125,7 @@ export default function AdminDashboardPage() {
     disapprovedBags: 0,
     pendingBags: 0,
     totalPointsAwarded: 0,
+    totalWeightKg: 0,
     recyclableBags: 0,
     organicBags: 0,
     residualBags: 0,
