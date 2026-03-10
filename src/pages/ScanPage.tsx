@@ -21,6 +21,7 @@ interface BagDetails {
     name: string;
     location: string | null;
     total_points: number;
+    household_code: string | null;
   };
 }
 
