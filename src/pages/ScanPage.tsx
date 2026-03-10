@@ -648,6 +648,19 @@ export default function ScanPage() {
             </Card>
 
             <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Weight (kg) *</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+                placeholder="Enter bag weight in kg..."
+                className="w-full h-11 px-3 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Notes (optional)</label>
               <textarea
                 value={reviewNotes}

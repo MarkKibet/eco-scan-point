@@ -20,6 +20,11 @@ export default function AuthPage() {
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [name, setName] = useState('');
+  const [householdCode, setHouseholdCode] = useState('');
+  const [existingHouseholds, setExistingHouseholds] = useState<{id: string; name: string; household_code: string; location: string | null}[]>([]);
+  const [searchingHousehold, setSearchingHousehold] = useState(false);
+  const [selectedHousehold, setSelectedHousehold] = useState<string | null>(null);
+  const [isExistingHousehold, setIsExistingHousehold] = useState(false);
   const [location, setLocation] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
