@@ -72,6 +72,7 @@ export default function ScanPage() {
   const [collectorReview, setCollectorReview] = useState<CollectorReviewDetails | null>(null);
   const [receiverNotes, setReceiverNotes] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
+  const [weightKg, setWeightKg] = useState('');
   const [disapprovalReason, setDisapprovalReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
