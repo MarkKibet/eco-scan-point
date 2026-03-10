@@ -246,6 +246,7 @@ export default function AdminDashboardPage() {
     const approvedReviews = reviewsData?.filter(r => r.status === 'approved') || [];
     const disapprovedReviews = reviewsData?.filter(r => r.status === 'disapproved') || [];
     const totalPoints = approvedReviews.reduce((sum, r) => sum + (r.points_awarded || 0), 0);
+    const totalWeight = reviewsData?.reduce((sum, r) => sum + (Number((r as any).weight_kg) || 0), 0) || 0;
 
     const recyclableBags = bagsData?.filter(b => b.bag_type === 'recyclable' || b.qr_code?.startsWith('WWR')) || [];
     const biodegradableBags = bagsData?.filter(b => b.bag_type === 'biodegradable' || b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
@@ -265,6 +266,7 @@ export default function AdminDashboardPage() {
       disapprovedBags: disapprovedReviews.length,
       pendingBags: (bagsData?.length || 0) - approvedReviews.length - disapprovedReviews.length,
       totalPointsAwarded: totalPoints,
+      totalWeightKg: Math.round(totalWeight * 100) / 100,
       recyclableBags: recyclableBags.length,
       organicBags: biodegradableBags.length,
       residualBags: residualBags.length,
