@@ -888,6 +888,7 @@ export default function AdminDashboardPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Household ID</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Phone</TableHead>
                         <TableHead>Location</TableHead>
@@ -905,6 +906,7 @@ export default function AdminDashboardPage() {
                             setSheetOpen(true);
                           }}
                         >
+                          <TableCell className="font-mono text-xs">{(user as any).household_code || 'N/A'}</TableCell>
                           <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                           <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>
