@@ -626,6 +626,74 @@ export default function AuthPage() {
                   </div>
                 </div>
 
+                {/* Household Identifier */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Household ID *</label>
+                  <p className="text-xs text-muted-foreground">e.g., HazinaEstate/001</p>
+                  
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => { setIsExistingHousehold(false); setSelectedHousehold(null); }}
+                      className={`flex-1 text-xs py-2 px-3 rounded-lg border transition-colors ${
+                        !isExistingHousehold ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-input text-muted-foreground'
+                      }`}
+                    >
+                      New Household
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsExistingHousehold(true)}
+                      className={`flex-1 text-xs py-2 px-3 rounded-lg border transition-colors ${
+                        isExistingHousehold ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-input text-muted-foreground'
+                      }`}
+                    >
+                      Existing Household
+                    </button>
+                  </div>
+
+                  {!isExistingHousehold ? (
+                    <input
+                      type="text"
+                      value={householdCode}
+                      onChange={(e) => setHouseholdCode(e.target.value)}
+                      placeholder="Enter unique Household ID"
+                      className="w-full h-11 px-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Search by Household ID..."
+                        onChange={(e) => handleSearchHousehold(e.target.value)}
+                        className="w-full h-11 px-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                      {searchingHousehold && (
+                        <p className="text-xs text-muted-foreground">Searching...</p>
+                      )}
+                      {existingHouseholds.length > 0 && (
+                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                          {existingHouseholds.map(h => (
+                            <button
+                              key={h.id}
+                              type="button"
+                              onClick={() => setSelectedHousehold(h.id)}
+                              className={`w-full text-left p-3 rounded-lg border text-sm transition-colors ${
+                                selectedHousehold === h.id 
+                                  ? 'border-emerald-500 bg-emerald-50' 
+                                  : 'border-input hover:bg-muted/50'
+                              }`}
+                            >
+                              <p className="font-medium">{h.household_code}</p>
+                              <p className="text-xs text-muted-foreground">{h.name} • {h.location || 'No location'}</p>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Location (optional)</label>
                   <div className="relative">
@@ -642,7 +710,7 @@ export default function AuthPage() {
 
                 <Button
                   type="submit"
-                  disabled={submitting || !name.trim()}
+                  disabled={submitting || !name.trim() || (!isExistingHousehold && !householdCode.trim()) || (isExistingHousehold && !selectedHousehold)}
                   className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                   {submitting ? 'Creating Account...' : 'Get Started'}
