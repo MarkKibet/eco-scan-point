@@ -46,6 +46,7 @@ interface DashboardStats {
   disapprovedBags: number;
   pendingBags: number;
   totalPointsAwarded: number;
+  totalWeightKg: number;
   recyclableBags: number;
   organicBags: number;
   residualBags: number;
@@ -87,6 +88,7 @@ interface UserRecord {
   total_points: number;
   created_at: string;
   role: string;
+  household_code: string | null;
 }
 
 interface BagRecord {
@@ -124,6 +126,7 @@ export default function AdminDashboardPage() {
     disapprovedBags: 0,
     pendingBags: 0,
     totalPointsAwarded: 0,
+    totalWeightKg: 0,
     recyclableBags: 0,
     organicBags: 0,
     residualBags: 0,
@@ -244,6 +247,7 @@ export default function AdminDashboardPage() {
     const approvedReviews = reviewsData?.filter(r => r.status === 'approved') || [];
     const disapprovedReviews = reviewsData?.filter(r => r.status === 'disapproved') || [];
     const totalPoints = approvedReviews.reduce((sum, r) => sum + (r.points_awarded || 0), 0);
+    const totalWeight = reviewsData?.reduce((sum, r) => sum + (Number((r as any).weight_kg) || 0), 0) || 0;
 
     const recyclableBags = bagsData?.filter(b => b.bag_type === 'recyclable' || b.qr_code?.startsWith('WWR')) || [];
     const biodegradableBags = bagsData?.filter(b => b.bag_type === 'biodegradable' || b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
@@ -263,6 +267,7 @@ export default function AdminDashboardPage() {
       disapprovedBags: disapprovedReviews.length,
       pendingBags: (bagsData?.length || 0) - approvedReviews.length - disapprovedReviews.length,
       totalPointsAwarded: totalPoints,
+      totalWeightKg: Math.round(totalWeight * 100) / 100,
       recyclableBags: recyclableBags.length,
       organicBags: biodegradableBags.length,
       residualBags: residualBags.length,
@@ -620,6 +625,20 @@ export default function AdminDashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
+                        <Package className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{stats.totalWeightKg} kg</p>
+                        <p className="text-xs text-muted-foreground">Total Weight</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Bag Type Stats */}
@@ -869,6 +888,7 @@ export default function AdminDashboardPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Household ID</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Phone</TableHead>
                         <TableHead>Location</TableHead>
@@ -886,6 +906,7 @@ export default function AdminDashboardPage() {
                             setSheetOpen(true);
                           }}
                         >
+                          <TableCell className="font-mono text-xs">{(user as any).household_code || 'N/A'}</TableCell>
                           <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                           <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>

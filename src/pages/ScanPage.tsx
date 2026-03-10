@@ -21,6 +21,7 @@ interface BagDetails {
     name: string;
     location: string | null;
     total_points: number;
+    household_code: string | null;
   };
 }
 
@@ -72,6 +73,7 @@ export default function ScanPage() {
   const [collectorReview, setCollectorReview] = useState<CollectorReviewDetails | null>(null);
   const [receiverNotes, setReceiverNotes] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
+  const [weightKg, setWeightKg] = useState('');
   const [disapprovalReason, setDisapprovalReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -231,7 +233,7 @@ export default function ScanPage() {
 
     const { data: householdProfile } = await supabase
       .from('profiles')
-      .select('name, location, total_points')
+      .select('name, location, total_points, household_code')
       .eq('id', bag.household_id)
       .maybeSingle();
 
@@ -299,7 +301,7 @@ export default function ScanPage() {
     // Get household info
     const { data: householdProfile } = await supabase
       .from('profiles')
-      .select('name, location, total_points')
+      .select('name, location, total_points, household_code')
       .eq('id', bag.household_id)
       .maybeSingle();
 
@@ -388,7 +390,8 @@ export default function ScanPage() {
         status: approved ? 'approved' : 'disapproved',
         points_awarded: pointsAwarded,
         notes: reviewNotes || null,
-        disapproval_reason: approved ? null : finalReason
+        disapproval_reason: approved ? null : finalReason,
+        weight_kg: weightKg ? parseFloat(weightKg) : null
       });
 
     setSubmitting(false);
@@ -409,6 +412,7 @@ export default function ScanPage() {
     setCollectorReview(null);
     setManualCode('');
     setReviewNotes('');
+    setWeightKg('');
     setReceiverNotes('');
     setDisapprovalReason('');
     setCustomReason('');
@@ -587,6 +591,12 @@ export default function ScanPage() {
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground mb-3">Household Details</h3>
                 <div className="space-y-2">
+                  {bagDetails.household?.household_code && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted-foreground">Household ID:</span>
+                      <span className="font-mono font-medium">{bagDetails.household.household_code}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-sm">
                     <User className="w-4 h-4 text-muted-foreground" />
                     <span>{bagDetails.household?.name || 'Unknown'}</span>
@@ -643,6 +653,19 @@ export default function ScanPage() {
                 })()}
               </CardContent>
             </Card>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Weight (kg) *</label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                value={weightKg}
+                onChange={(e) => setWeightKg(e.target.value)}
+                placeholder="Enter bag weight in kg..."
+                className="w-full h-11 px-3 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">Notes (optional)</label>

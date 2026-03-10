@@ -11,6 +11,7 @@ interface Profile {
   location: string | null;
   total_points: number;
   created_at: string;
+  household_code: string | null;
 }
 
 interface AuthContextType {
