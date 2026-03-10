@@ -411,6 +411,7 @@ export default function ScanPage() {
     setCollectorReview(null);
     setManualCode('');
     setReviewNotes('');
+    setWeightKg('');
     setReceiverNotes('');
     setDisapprovalReason('');
     setCustomReason('');
