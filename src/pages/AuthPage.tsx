@@ -147,6 +147,22 @@ export default function AuthPage() {
     }
   };
 
+  const handleSearchHousehold = async (searchCode: string) => {
+    if (searchCode.length < 3) {
+      setExistingHouseholds([]);
+      return;
+    }
+    setSearchingHousehold(true);
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, name, household_code, location')
+      .not('household_code', 'is', null)
+      .ilike('household_code', `%${searchCode}%`)
+      .limit(5);
+    setExistingHouseholds((data || []).filter(d => d.household_code !== null) as any);
+    setSearchingHousehold(false);
+  };
+
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -154,21 +170,64 @@ export default function AuthPage() {
       return;
     }
 
+    if (!isExistingHousehold && !householdCode.trim()) {
+      toast.error('Please enter a Household ID (e.g., HazinaEstate/001)');
+      return;
+    }
+
     setSubmitting(true);
 
-    const { error } = await signInWithPhone(phone, {
-      name: name.trim(),
-      location: location.trim() || undefined,
-      role: 'household'
-    });
+    if (isExistingHousehold && selectedHousehold) {
+      // Link to existing household - sign up with same household_code
+      const existingH = existingHouseholds.find(h => h.id === selectedHousehold);
+      const { error } = await signInWithPhone(phone, {
+        name: name.trim(),
+        location: existingH?.location || location.trim() || undefined,
+        role: 'household'
+      });
 
-    setSubmitting(false);
+      setSubmitting(false);
 
-    if (error) {
-      toast.error(error.message);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        // Update the new profile with the same household_code
+        if (existingH?.household_code) {
+          // We need to update after signup - the profile is created by trigger
+          // We'll update household_code via a separate call after auth
+          const { data: { user: newUser } } = await supabase.auth.getUser();
+          if (newUser) {
+            await supabase.from('profiles').update({ 
+              household_code: existingH.household_code,
+              location: existingH.location || location.trim() || null
+            }).eq('id', newUser.id);
+          }
+        }
+        toast.success('Welcome to TakaTrace!');
+        navigate('/');
+      }
     } else {
-      toast.success('Welcome to TakaTrace!');
-      navigate('/');
+      const { error } = await signInWithPhone(phone, {
+        name: name.trim(),
+        location: location.trim() || undefined,
+        role: 'household'
+      });
+
+      setSubmitting(false);
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        // Set household_code on the new profile
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        if (newUser) {
+          await supabase.from('profiles').update({ 
+            household_code: householdCode.trim() 
+          }).eq('id', newUser.id);
+        }
+        toast.success('Welcome to TakaTrace!');
+        navigate('/');
+      }
     }
   };
 
