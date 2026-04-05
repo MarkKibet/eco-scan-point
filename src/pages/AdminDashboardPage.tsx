@@ -130,6 +130,9 @@ export default function AdminDashboardPage() {
     pendingBags: 0,
     totalPointsAwarded: 0,
     totalWeightKg: 0,
+    recyclableWeightKg: 0,
+    organicWeightKg: 0,
+    residualWeightKg: 0,
     recyclableBags: 0,
     organicBags: 0,
     residualBags: 0,
@@ -256,6 +259,15 @@ export default function AdminDashboardPage() {
     const biodegradableBags = bagsData?.filter(b => b.bag_type === 'biodegradable' || b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
     const residualBags = bagsData?.filter(b => b.bag_type === 'residual' || b.qr_code?.startsWith('WWS')) || [];
 
+    // Weight breakdown by bag type
+    const recyclableBagIds = new Set(recyclableBags.map(b => b.id));
+    const organicBagIds = new Set(biodegradableBags.map(b => b.id));
+    const residualBagIds = new Set(residualBags.map(b => b.id));
+
+    const recyclableWeight = reviewsData?.filter(r => recyclableBagIds.has(r.bag_id)).reduce((sum, r) => sum + (Number(r.weight_kg) || 0), 0) || 0;
+    const organicWeight = reviewsData?.filter(r => organicBagIds.has(r.bag_id)).reduce((sum, r) => sum + (Number(r.weight_kg) || 0), 0) || 0;
+    const residualWeight = reviewsData?.filter(r => residualBagIds.has(r.bag_id)).reduce((sum, r) => sum + (Number(r.weight_kg) || 0), 0) || 0;
+
     // Receiver verification stats
     const receiverApprovedReviews = receiverReviewsData?.filter(r => r.status === 'approved') || [];
     const receiverDisapprovedReviews = receiverReviewsData?.filter(r => r.status === 'disapproved') || [];
@@ -271,6 +283,9 @@ export default function AdminDashboardPage() {
       pendingBags: (bagsData?.length || 0) - approvedReviews.length - disapprovedReviews.length,
       totalPointsAwarded: totalPoints,
       totalWeightKg: Math.round(totalWeight * 100) / 100,
+      recyclableWeightKg: Math.round(recyclableWeight * 100) / 100,
+      organicWeightKg: Math.round(organicWeight * 100) / 100,
+      residualWeightKg: Math.round(residualWeight * 100) / 100,
       recyclableBags: recyclableBags.length,
       organicBags: biodegradableBags.length,
       residualBags: residualBags.length,
