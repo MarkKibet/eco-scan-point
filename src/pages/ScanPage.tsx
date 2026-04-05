@@ -628,7 +628,7 @@ export default function ScanPage() {
                     points = 5;
                   } else if (bagDetails.qr_code.startsWith('WWS')) {
                     bagType = 'Residual';
-                    bagColor = 'bg-destructive';
+                    bagColor = 'bg-gray-900 dark:bg-gray-700';
                     points = 1;
                   }
                   return (
