@@ -667,14 +667,14 @@ export default function AdminDashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-destructive/50">
+                <Card className="border-gray-700/50">
                   <CardContent className="p-3">
                     <div className="flex flex-col items-center text-center">
-                      <div className="w-8 h-8 bg-destructive rounded-lg flex items-center justify-center mb-1">
+                      <div className="w-8 h-8 bg-gray-900 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-1">
                         <Trash2 className="w-4 h-4 text-white" />
                       </div>
-                      <p className="text-xl font-bold text-destructive">{stats.residualBags}</p>
-                      <p className="text-xs text-muted-foreground">Red (1 pt)</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-300">{stats.residualBags}</p>
+                      <p className="text-xs text-muted-foreground">Black (1 pt)</p>
                     </div>
                   </CardContent>
                 </Card>
