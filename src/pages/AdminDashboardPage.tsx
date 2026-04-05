@@ -698,7 +698,46 @@ export default function AdminDashboardPage() {
                 </Card>
               </div>
 
-              {/* Bag Status Cards */}
+              {/* Weight Breakdown by Bag Type */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Weight Breakdown by Bag Type
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-600" />
+                        <span className="text-sm text-muted-foreground">Recyclables (Blue)</span>
+                      </div>
+                      <span className="text-sm font-bold text-blue-600">{stats.recyclableWeightKg} kg</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-600" />
+                        <span className="text-sm text-muted-foreground">Biodegradables (Green)</span>
+                      </div>
+                      <span className="text-sm font-bold text-green-600">{stats.organicWeightKg} kg</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-900 dark:bg-gray-500" />
+                        <span className="text-sm text-muted-foreground">Residuals (Black)</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900 dark:text-gray-300">{stats.residualWeightKg} kg</span>
+                    </div>
+                    <div className="border-t border-border pt-2 flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">Total</span>
+                      <span className="text-sm font-bold text-foreground">{stats.totalWeightKg} kg</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+
               <div className="grid grid-cols-3 gap-3">
                 <Card className="border-primary/50">
                   <CardContent className="p-3 text-center">
