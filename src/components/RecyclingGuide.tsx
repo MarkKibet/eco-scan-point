@@ -166,45 +166,64 @@ export function BagTypeSelector({
   value,
   onChange
 }: {
-  value: 'recyclable' | 'organic';
-  onChange: (value: 'recyclable' | 'organic') => void;
+  value: 'recyclable' | 'organic' | 'residual';
+  onChange: (value: 'recyclable' | 'organic' | 'residual') => void;
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="grid grid-cols-3 gap-2">
       <button
         onClick={() => onChange('organic')}
-        className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+        className={`p-3 rounded-lg border-2 transition-all ${
           value === 'organic'
             ? 'border-green-500 bg-green-500/10'
             : 'border-border hover:border-green-500/50'
         }`}
       >
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-col items-center gap-1.5">
           <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
             <Leaf className="w-3.5 h-3.5 text-white" />
           </div>
-          <div className="text-left">
-            <p className="text-sm font-medium text-foreground">Green Bag</p>
-            <p className="text-xs text-muted-foreground">Biodegradables • 5 pts</p>
+          <div className="text-center">
+            <p className="text-xs font-medium text-foreground">Green</p>
+            <p className="text-[10px] text-muted-foreground">Bio • 5 pts</p>
           </div>
         </div>
       </button>
 
       <button
         onClick={() => onChange('recyclable')}
-        className={`flex-1 p-3 rounded-lg border-2 transition-all ${
+        className={`p-3 rounded-lg border-2 transition-all ${
           value === 'recyclable'
             ? 'border-blue-500 bg-blue-500/10'
             : 'border-border hover:border-blue-500/50'
         }`}
       >
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex flex-col items-center gap-1.5">
           <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
             <Trash2 className="w-3.5 h-3.5 text-white" />
           </div>
-          <div className="text-left">
-            <p className="text-sm font-medium text-foreground">Blue Bag</p>
-            <p className="text-xs text-muted-foreground">Recyclables • 15 pts</p>
+          <div className="text-center">
+            <p className="text-xs font-medium text-foreground">Blue</p>
+            <p className="text-[10px] text-muted-foreground">Recycle • 15 pts</p>
+          </div>
+        </div>
+      </button>
+
+      <button
+        onClick={() => onChange('residual')}
+        className={`p-3 rounded-lg border-2 transition-all ${
+          value === 'residual'
+            ? 'border-gray-700 bg-gray-900/10'
+            : 'border-border hover:border-gray-700/50'
+        }`}
+      >
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="w-6 h-6 bg-gray-900 dark:bg-gray-700 rounded-full flex items-center justify-center">
+            <Trash2 className="w-3.5 h-3.5 text-white" />
+          </div>
+          <div className="text-center">
+            <p className="text-xs font-medium text-foreground">Black</p>
+            <p className="text-[10px] text-muted-foreground">Residual • 1 pt</p>
           </div>
         </div>
       </button>

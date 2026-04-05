@@ -47,6 +47,9 @@ interface DashboardStats {
   pendingBags: number;
   totalPointsAwarded: number;
   totalWeightKg: number;
+  recyclableWeightKg: number;
+  organicWeightKg: number;
+  residualWeightKg: number;
   recyclableBags: number;
   organicBags: number;
   residualBags: number;
@@ -127,6 +130,9 @@ export default function AdminDashboardPage() {
     pendingBags: 0,
     totalPointsAwarded: 0,
     totalWeightKg: 0,
+    recyclableWeightKg: 0,
+    organicWeightKg: 0,
+    residualWeightKg: 0,
     recyclableBags: 0,
     organicBags: 0,
     residualBags: 0,
@@ -253,6 +259,15 @@ export default function AdminDashboardPage() {
     const biodegradableBags = bagsData?.filter(b => b.bag_type === 'biodegradable' || b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
     const residualBags = bagsData?.filter(b => b.bag_type === 'residual' || b.qr_code?.startsWith('WWS')) || [];
 
+    // Weight breakdown by bag type
+    const recyclableBagIds = new Set(recyclableBags.map(b => b.id));
+    const organicBagIds = new Set(biodegradableBags.map(b => b.id));
+    const residualBagIds = new Set(residualBags.map(b => b.id));
+
+    const recyclableWeight = reviewsData?.filter(r => recyclableBagIds.has(r.bag_id)).reduce((sum, r) => sum + (Number(r.weight_kg) || 0), 0) || 0;
+    const organicWeight = reviewsData?.filter(r => organicBagIds.has(r.bag_id)).reduce((sum, r) => sum + (Number(r.weight_kg) || 0), 0) || 0;
+    const residualWeight = reviewsData?.filter(r => residualBagIds.has(r.bag_id)).reduce((sum, r) => sum + (Number(r.weight_kg) || 0), 0) || 0;
+
     // Receiver verification stats
     const receiverApprovedReviews = receiverReviewsData?.filter(r => r.status === 'approved') || [];
     const receiverDisapprovedReviews = receiverReviewsData?.filter(r => r.status === 'disapproved') || [];
@@ -268,6 +283,9 @@ export default function AdminDashboardPage() {
       pendingBags: (bagsData?.length || 0) - approvedReviews.length - disapprovedReviews.length,
       totalPointsAwarded: totalPoints,
       totalWeightKg: Math.round(totalWeight * 100) / 100,
+      recyclableWeightKg: Math.round(recyclableWeight * 100) / 100,
+      organicWeightKg: Math.round(organicWeight * 100) / 100,
+      residualWeightKg: Math.round(residualWeight * 100) / 100,
       recyclableBags: recyclableBags.length,
       organicBags: biodegradableBags.length,
       residualBags: residualBags.length,
@@ -497,8 +515,9 @@ export default function AdminDashboardPage() {
   ];
 
   const bagTypeData = [
-    { name: 'Recyclables', value: stats.recyclableBags, color: 'hsl(var(--primary))' },
-    { name: 'Organics', value: stats.organicBags, color: '#D97706' }
+    { name: 'Recyclables', value: stats.recyclableBags, color: '#2563eb' },
+    { name: 'Organics', value: stats.organicBags, color: '#16a34a' },
+    { name: 'Residuals', value: stats.residualBags, color: '#111827' }
   ];
 
   const barData = [
@@ -667,20 +686,59 @@ export default function AdminDashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="border-destructive/50">
+                <Card className="border-gray-700/50">
                   <CardContent className="p-3">
                     <div className="flex flex-col items-center text-center">
-                      <div className="w-8 h-8 bg-destructive rounded-lg flex items-center justify-center mb-1">
+                      <div className="w-8 h-8 bg-gray-900 dark:bg-gray-700 rounded-lg flex items-center justify-center mb-1">
                         <Trash2 className="w-4 h-4 text-white" />
                       </div>
-                      <p className="text-xl font-bold text-destructive">{stats.residualBags}</p>
-                      <p className="text-xs text-muted-foreground">Red (1 pt)</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-300">{stats.residualBags}</p>
+                      <p className="text-xs text-muted-foreground">Black (1 pt)</p>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Bag Status Cards */}
+              {/* Weight Breakdown by Bag Type */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Weight Breakdown by Bag Type
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-600" />
+                        <span className="text-sm text-muted-foreground">Recyclables (Blue)</span>
+                      </div>
+                      <span className="text-sm font-bold text-blue-600">{stats.recyclableWeightKg} kg</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-600" />
+                        <span className="text-sm text-muted-foreground">Biodegradables (Green)</span>
+                      </div>
+                      <span className="text-sm font-bold text-green-600">{stats.organicWeightKg} kg</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-900 dark:bg-gray-500" />
+                        <span className="text-sm text-muted-foreground">Residuals (Black)</span>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900 dark:text-gray-300">{stats.residualWeightKg} kg</span>
+                    </div>
+                    <div className="border-t border-border pt-2 flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">Total</span>
+                      <span className="text-sm font-bold text-foreground">{stats.totalWeightKg} kg</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+
               <div className="grid grid-cols-3 gap-3">
                 <Card className="border-primary/50">
                   <CardContent className="p-3 text-center">
