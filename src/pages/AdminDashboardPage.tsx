@@ -47,6 +47,9 @@ interface DashboardStats {
   pendingBags: number;
   totalPointsAwarded: number;
   totalWeightKg: number;
+  recyclableWeightKg: number;
+  organicWeightKg: number;
+  residualWeightKg: number;
   recyclableBags: number;
   organicBags: number;
   residualBags: number;
