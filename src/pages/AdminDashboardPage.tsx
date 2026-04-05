@@ -515,8 +515,9 @@ export default function AdminDashboardPage() {
   ];
 
   const bagTypeData = [
-    { name: 'Recyclables', value: stats.recyclableBags, color: 'hsl(var(--primary))' },
-    { name: 'Organics', value: stats.organicBags, color: '#D97706' }
+    { name: 'Recyclables', value: stats.recyclableBags, color: '#2563eb' },
+    { name: 'Organics', value: stats.organicBags, color: '#16a34a' },
+    { name: 'Residuals', value: stats.residualBags, color: '#111827' }
   ];
 
   const barData = [
