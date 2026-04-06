@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Recycle, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield, Mail, Lock, Eye, EyeOff, Package } from 'lucide-react';
 import { toast } from 'sonner';
