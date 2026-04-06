@@ -232,7 +232,7 @@ export default function AuthPage() {
   };
 
   const validateCollectorEmail = (email: string) => {
-    return email.toLowerCase().endsWith('@wastewise.com');
+    return email.toLowerCase().endsWith('@takatrace.com');
   };
 
   const validateReceiverEmail = (email: string) => {

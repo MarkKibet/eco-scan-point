@@ -535,7 +535,7 @@ export default function AdminDashboardPage() {
           </Button>
           <div>
             <h1 className="text-lg font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">WasteWise Analytics</p>
+            <p className="text-sm text-muted-foreground"><p className="text-sm text-muted-foreground">TakaTrace Analytics</p></p>
           </div>
         </div>
       </header>
