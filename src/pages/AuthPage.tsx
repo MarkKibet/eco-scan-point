@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Recycle, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield, Mail, Lock, Eye, EyeOff, Package } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,6 +33,7 @@ export default function AuthPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [adminPin, setAdminPin] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
@@ -45,9 +47,13 @@ export default function AuthPage() {
   };
 
   const handleAdminLogin = async () => {
+    if (adminPin !== '2650') {
+      toast.error('Invalid PIN');
+      return;
+    }
     setAdminLoading(true);
     const adminPhone = '0717151928';
-    const adminPassword = 'Eco@123';
+    const adminPassword = 'TakaTrace@2650';
     const adminEmail = `${adminPhone}@takatrace.local`;
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -390,8 +396,16 @@ export default function AuthPage() {
                   </button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  This will log you in as the system administrator.
+                  Enter admin PIN to continue.
                 </p>
+                <Input
+                  type="password"
+                  placeholder="Enter PIN"
+                  value={adminPin}
+                  onChange={(e) => setAdminPin(e.target.value)}
+                  maxLength={4}
+                  className="text-center text-lg tracking-widest"
+                />
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
