@@ -488,7 +488,7 @@ export default function AdminDashboardPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `wastewise-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `link.download = `takatrace-${type}-${new Date().toISOString().split('T')[0]}.csv`;-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
