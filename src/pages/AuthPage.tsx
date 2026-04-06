@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Recycle, Phone, User, MapPin, ArrowRight, ChevronLeft, Home, Truck, X, Shield, Mail, Lock, Eye, EyeOff, Package } from 'lucide-react';
 import { toast } from 'sonner';
@@ -33,7 +32,6 @@ export default function AuthPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
-  const [adminPin, setAdminPin] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
@@ -46,15 +44,10 @@ export default function AuthPage() {
     setShowAdminLogin(true);
   };
 
-  const handleAdminLogin = async (pinValue?: string) => {
-    const pin = pinValue ?? adminPin;
-    if (pin !== '2650') {
-      toast.error('Invalid PIN');
-      return;
-    }
+  const handleAdminLogin = async () => {
     setAdminLoading(true);
     const adminPhone = '0717151928';
-    const adminPassword = 'TakaTrace@2650';
+    const adminPassword = 'Eco@123';
     const adminEmail = `${adminPhone}@takatrace.local`;
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -397,22 +390,8 @@ export default function AuthPage() {
                   </button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Enter admin PIN to continue.
+                  This will log you in as the system administrator.
                 </p>
-                <Input
-                  type="password"
-                  placeholder="Enter PIN"
-                  value={adminPin}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setAdminPin(val);
-                    if (val.length === 4) {
-                      handleAdminLogin(val);
-                    }
-                  }}
-                  maxLength={4}
-                  className="text-center text-lg tracking-widest"
-                />
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -422,7 +401,7 @@ export default function AuthPage() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={() => handleAdminLogin()}
+                    onClick={handleAdminLogin}
                     disabled={adminLoading}
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                   >
