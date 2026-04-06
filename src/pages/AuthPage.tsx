@@ -46,8 +46,9 @@ export default function AuthPage() {
     setShowAdminLogin(true);
   };
 
-  const handleAdminLogin = async () => {
-    if (adminPin !== '2650') {
+  const handleAdminLogin = async (pinValue?: string) => {
+    const pin = pinValue ?? adminPin;
+    if (pin !== '2650') {
       toast.error('Invalid PIN');
       return;
     }
@@ -402,7 +403,13 @@ export default function AuthPage() {
                   type="password"
                   placeholder="Enter PIN"
                   value={adminPin}
-                  onChange={(e) => setAdminPin(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAdminPin(val);
+                    if (val.length === 4) {
+                      handleAdminLogin(val);
+                    }
+                  }}
                   maxLength={4}
                   className="text-center text-lg tracking-widest"
                 />
@@ -415,7 +422,7 @@ export default function AuthPage() {
                     Cancel
                   </Button>
                   <Button
-                    onClick={handleAdminLogin}
+                    onClick={() => handleAdminLogin()}
                     disabled={adminLoading}
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                   >
