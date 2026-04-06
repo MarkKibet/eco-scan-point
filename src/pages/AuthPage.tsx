@@ -406,8 +406,8 @@ export default function AuthPage() {
                   onChange={(e) => {
                     const val = e.target.value;
                     setAdminPin(val);
-                    if (val === '2650') {
-                      handleAdminLogin();
+                    if (val.length === 4) {
+                      handleAdminLogin(val);
                     }
                   }}
                   maxLength={4}
