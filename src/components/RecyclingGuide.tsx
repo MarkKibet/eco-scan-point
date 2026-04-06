@@ -81,6 +81,26 @@ export default function RecyclingGuide({ compact = false }: RecyclingGuideProps)
             <p className="text-[10px] text-blue-600 font-medium mt-1">15 points per bag</p>
           </CardContent>
         </Card>
+
+        <Card className="border-gray-500/50 bg-gray-500/5 col-span-2">
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="text-xs flex items-center gap-1.5">
+              <Trash2 className="w-3.5 h-3.5 text-gray-900 dark:text-gray-400" />
+              <span className="text-gray-900 dark:text-gray-400">Residuals (Black)</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <ul className="text-[10px] text-muted-foreground space-y-0.5 grid grid-cols-2 gap-x-2">
+              {NON_RECYCLABLE_ITEMS.slice(0, 4).map((item, i) => (
+                <li key={i} className="flex items-center gap-1">
+                  <Trash2 className="w-2.5 h-2.5 text-gray-900 dark:text-gray-400 flex-shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <p className="text-[10px] text-gray-900 dark:text-gray-400 font-medium mt-1">1 point per bag</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

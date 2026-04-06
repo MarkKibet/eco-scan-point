@@ -87,8 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     phone: string,
     metadata: { name: string; location?: string; role: AppRole }
   ) => {
-    const fakeEmail = `${phone}@wastewise.local`;
-    const fakePassword = `wastewise_${phone}_secure`;
+    const fakeEmail = `${phone}@takatrace.local`;
+    const fakePassword = `takatrace_${phone}_secure`;
     const redirectUrl = `${window.location.origin}/`;
 
     // Try to sign in first (existing user)

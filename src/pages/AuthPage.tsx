@@ -48,7 +48,7 @@ export default function AuthPage() {
     setAdminLoading(true);
     const adminPhone = '0717151928';
     const adminPassword = 'Eco@123';
-    const adminEmail = `${adminPhone}@wastewise.local`;
+    const adminEmail = `${adminPhone}@takatrace.local`;
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: adminEmail,
@@ -111,8 +111,8 @@ export default function AuthPage() {
       setSubmitting(true);
 
       // Check if user exists by trying to sign in
-      const fakeEmail = `${phone}@wastewise.local`;
-      const fakePassword = `wastewise_${phone}_secure`;
+      const fakeEmail = `${phone}@takatrace.local`;
+      const fakePassword = `takatrace_${phone}_secure`;
 
       const { error } = await supabase.auth.signInWithPassword({
         email: fakeEmail,
@@ -232,7 +232,7 @@ export default function AuthPage() {
   };
 
   const validateCollectorEmail = (email: string) => {
-    return email.toLowerCase().endsWith('@wastewise.com');
+    return email.toLowerCase().endsWith('@takatrace.com');
   };
 
   const validateReceiverEmail = (email: string) => {
@@ -248,7 +248,7 @@ export default function AuthPage() {
     }
 
     if (!validateCollectorEmail(email)) {
-      toast.error('Collectors must use a @wastewise.com email');
+      toast.error('Collectors must use a @takatrace.com email');
       return;
     }
 
@@ -787,12 +787,12 @@ export default function AuthPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@wastewise.com"
+                      placeholder="you@takatrace.com"
                       className="w-full h-11 pl-10 pr-4 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Must end with @wastewise.com
+                    Must end with @takatrace.com
                   </p>
                 </div>
 

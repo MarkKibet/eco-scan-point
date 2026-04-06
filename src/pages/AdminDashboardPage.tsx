@@ -488,7 +488,7 @@ export default function AdminDashboardPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `wastewise-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `takatrace-${type}-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -535,7 +535,7 @@ export default function AdminDashboardPage() {
           </Button>
           <div>
             <h1 className="text-lg font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">WasteWise Analytics</p>
+            <p className="text-sm text-muted-foreground"><p className="text-sm text-muted-foreground">TakaTrace Analytics</p></p>
           </div>
         </div>
       </header>
