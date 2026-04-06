@@ -32,6 +32,7 @@ export default function AuthPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [adminPin, setAdminPin] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
