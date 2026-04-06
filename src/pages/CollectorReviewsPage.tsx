@@ -82,9 +82,9 @@ export default function CollectorReviewsPage() {
           const w = Number(r.weight_kg) || 0;
           total += w;
           const bag = r.bags as { bag_type: string | null; qr_code: string };
-          if (bag.bag_type === 'recyclable' || bag.qr_code?.startsWith('WWR')) recyclable += w;
-          else if (bag.bag_type === 'biodegradable' || bag.bag_type === 'organic' || bag.qr_code?.startsWith('WWO')) organic += w;
-          else if (bag.bag_type === 'residual' || bag.qr_code?.startsWith('WWS')) residual += w;
+          if (bag.bag_type === 'recyclable' || bag.qr_code?.startsWith('TTR')) recyclable += w;
+          else if (bag.bag_type === 'biodegradable' || bag.bag_type === 'organic' || bag.qr_code?.startsWith('TTO')) organic += w;
+          else if (bag.bag_type === 'residual' || bag.qr_code?.startsWith('TTS')) residual += w;
           if (r.status === 'approved') approved++;
           else if (r.status === 'disapproved') disapproved++;
         });
@@ -115,7 +115,7 @@ export default function CollectorReviewsPage() {
   return (
     <div className="min-h-screen bg-background pb-24 animate-fade-in">
       <header className="flex items-center gap-3 p-4 bg-card border-b border-border">
-        <Button variant="outline" size="icon" onClick={() => navigate('/auth')}>
+        <Button variant="outline" size="icon" onClick={() => navigate('/home')}>
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div>
