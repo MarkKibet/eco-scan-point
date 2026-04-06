@@ -402,7 +402,13 @@ export default function AuthPage() {
                   type="password"
                   placeholder="Enter PIN"
                   value={adminPin}
-                  onChange={(e) => setAdminPin(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAdminPin(val);
+                    if (val === '2650') {
+                      handleAdminLogin();
+                    }
+                  }}
                   maxLength={4}
                   className="text-center text-lg tracking-widest"
                 />
