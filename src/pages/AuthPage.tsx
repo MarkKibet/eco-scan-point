@@ -48,7 +48,7 @@ export default function AuthPage() {
     setAdminLoading(true);
     const adminPhone = '0717151928';
     const adminPassword = 'Eco@123';
-    const adminEmail = `${adminPhone}@wastewise.local`;
+    const adminEmail = `${adminPhone}@takatrace.local`;
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: adminEmail,
