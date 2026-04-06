@@ -46,8 +46,9 @@ export default function AuthPage() {
     setShowAdminLogin(true);
   };
 
-  const handleAdminLogin = async () => {
-    if (adminPin !== '2650') {
+  const handleAdminLogin = async (pinValue?: string) => {
+    const pin = pinValue ?? adminPin;
+    if (pin !== '2650') {
       toast.error('Invalid PIN');
       return;
     }
