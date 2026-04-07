@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import UserActivitySheet from '@/components/UserActivitySheet';
+import { AdminEditButton, AdminDeleteButton } from '@/components/AdminUserManagement';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
