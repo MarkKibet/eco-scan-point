@@ -292,9 +292,9 @@ export default function UserActivitySheet({ user, open, onOpenChange }: UserActi
                   bagActivities.length > 0 ? (
                     bagActivities.map(bag => {
                       const getBagTypeInfo = () => {
-                        if (bag.qr_code.startsWith('WWS') || bag.bag_type === 'residual') {
-                          return { label: 'Residual', points: 1, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
-                        } else if (bag.qr_code.startsWith('WWO') || bag.bag_type === 'organic' || bag.bag_type === 'biodegradable') {
+                        if (bag.qr_code.startsWith('TTS') || bag.bag_type === 'residual') {
+                          return { label: 'Residual', points: 1, color: 'bg-gray-900 dark:bg-gray-500', textColor: 'text-gray-900 dark:text-gray-300', Icon: Trash2 };
+                        } else if (bag.qr_code.startsWith('TTO') || bag.bag_type === 'organic' || bag.bag_type === 'biodegradable') {
                           return { label: 'Biodegradable', points: 5, color: 'bg-green-600', textColor: 'text-green-600', Icon: Trash2 };
                         }
                         return { label: 'Recyclable', points: 15, color: 'bg-blue-600', textColor: 'text-blue-600', Icon: Leaf };
@@ -351,9 +351,9 @@ export default function UserActivitySheet({ user, open, onOpenChange }: UserActi
                   reviewActivities.length > 0 ? (
                     reviewActivities.map(review => {
                       const getBagTypeInfo = () => {
-                        if (review.qr_code.startsWith('WWS') || review.bag_type === 'residual') {
-                          return { label: 'Residual', points: 1, color: 'bg-destructive', textColor: 'text-destructive', Icon: AlertTriangle };
-                        } else if (review.qr_code.startsWith('WWO') || review.bag_type === 'organic' || review.bag_type === 'biodegradable') {
+                        if (review.qr_code.startsWith('TTS') || review.bag_type === 'residual') {
+                          return { label: 'Residual', points: 1, color: 'bg-gray-900 dark:bg-gray-500', textColor: 'text-gray-900 dark:text-gray-300', Icon: Trash2 };
+                        } else if (review.qr_code.startsWith('TTO') || review.bag_type === 'organic' || review.bag_type === 'biodegradable') {
                           return { label: 'Biodegradable', points: 5, color: 'bg-green-600', textColor: 'text-green-600', Icon: Trash2 };
                         }
                         return { label: 'Recyclable', points: 15, color: 'bg-blue-600', textColor: 'text-blue-600', Icon: Leaf };
