@@ -302,7 +302,7 @@ export default function UserActivitySheet({ user, open, onOpenChange }: UserActi
                       const typeInfo = getBagTypeInfo();
                       
                       return (
-                        <div key={bag.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('blue') ? '#2563eb' : typeInfo.color.includes('green') ? '#16a34a' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#6b7280' }}>
+                        <div key={bag.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('blue') ? '#2563eb' : typeInfo.color.includes('green') ? '#16a34a' : typeInfo.color.includes('gray') ? '#111827' : '#6b7280' }}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${typeInfo.color}`}>
@@ -361,7 +361,7 @@ export default function UserActivitySheet({ user, open, onOpenChange }: UserActi
                       const typeInfo = getBagTypeInfo();
                       
                       return (
-                        <div key={review.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('blue') ? '#2563eb' : typeInfo.color.includes('green') ? '#16a34a' : typeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#6b7280' }}>
+                        <div key={review.id} className="border rounded-lg p-3 space-y-2" style={{ borderLeftWidth: '4px', borderLeftColor: typeInfo.color.includes('blue') ? '#2563eb' : typeInfo.color.includes('green') ? '#16a34a' : typeInfo.color.includes('gray') ? '#111827' : '#6b7280' }}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${typeInfo.color}`}>

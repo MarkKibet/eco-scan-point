@@ -147,7 +147,7 @@ export default function HistoryPage() {
             const bagTypeInfo = getBagTypeInfo(bag.qr_code);
             const BagIcon = bagTypeInfo.icon;
             return (
-              <Card key={bag.id} className={`border-l-4`} style={{ borderLeftColor: bagTypeInfo.color.includes('blue') ? '#2563eb' : bagTypeInfo.color.includes('green') ? '#16a34a' : bagTypeInfo.color.includes('destructive') ? 'hsl(var(--destructive))' : '#6b7280' }}>
+              <Card key={bag.id} className={`border-l-4`} style={{ borderLeftColor: bagTypeInfo.color.includes('blue') ? '#2563eb' : bagTypeInfo.color.includes('green') ? '#16a34a' : bagTypeInfo.color.includes('gray') ? '#111827' : '#6b7280' }}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
