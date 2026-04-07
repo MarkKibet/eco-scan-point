@@ -1059,11 +1059,12 @@ export default function AdminDashboardPage() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                         <TableRow>
                           <TableHead>Name</TableHead>
                           <TableHead>Verifications</TableHead>
                           <TableHead>Approved</TableHead>
                           <TableHead>Rejected</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
