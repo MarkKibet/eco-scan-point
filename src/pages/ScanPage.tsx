@@ -185,10 +185,10 @@ export default function ScanPage() {
     // Determine bag type and points from QR code prefix
     let bagType = 'recyclable';
     let pointsValue = 15;
-    if (code.startsWith('WWO')) {
+    if (code.startsWith('TTO')) {
       bagType = 'biodegradable';
       pointsValue = 5;
-    } else if (code.startsWith('WWS')) {
+    } else if (code.startsWith('TTS')) {
       bagType = 'residual';
       pointsValue = 1;
     }
@@ -372,11 +372,11 @@ export default function ScanPage() {
     // Determine points based on bag type from QR code prefix
     let pointsAwarded = 0;
     if (approved) {
-      if (bagDetails.qr_code.startsWith('WWR')) {
+      if (bagDetails.qr_code.startsWith('TTR')) {
         pointsAwarded = 15;
-      } else if (bagDetails.qr_code.startsWith('WWO')) {
+      } else if (bagDetails.qr_code.startsWith('TTO')) {
         pointsAwarded = 5;
-      } else if (bagDetails.qr_code.startsWith('WWS')) {
+      } else if (bagDetails.qr_code.startsWith('TTS')) {
         pointsAwarded = 1;
       }
     }
@@ -622,11 +622,11 @@ export default function ScanPage() {
                   let bagType = 'Recyclable';
                   let bagColor = 'bg-blue-600';
                   let points = 15;
-                  if (bagDetails.qr_code.startsWith('WWO')) {
+                  if (bagDetails.qr_code.startsWith('TTO')) {
                     bagType = 'Biodegradable';
                     bagColor = 'bg-green-600';
                     points = 5;
-                  } else if (bagDetails.qr_code.startsWith('WWS')) {
+                  } else if (bagDetails.qr_code.startsWith('TTS')) {
                     bagType = 'Residual';
                     bagColor = 'bg-gray-900 dark:bg-gray-700';
                     points = 1;
@@ -705,8 +705,9 @@ export default function ScanPage() {
             )}
 
             {(() => {
-              const isRecyclable = bagDetails.qr_code.startsWith('WWR');
-              const points = isRecyclable ? 15 : 5;
+              const isRecyclable = bagDetails.qr_code.startsWith('TTR');
+              const isBiodegradable = bagDetails.qr_code.startsWith('TTO');
+              const points = isRecyclable ? 15 : isBiodegradable ? 5 : 1;
               return (
                 <div className="flex gap-3 pt-2">
                   <Button

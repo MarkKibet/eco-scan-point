@@ -255,9 +255,9 @@ export default function AdminDashboardPage() {
     const totalPoints = approvedReviews.reduce((sum, r) => sum + (r.points_awarded || 0), 0);
     const totalWeight = reviewsData?.reduce((sum, r) => sum + (Number(r.weight_kg) || 0), 0) || 0;
 
-    const recyclableBags = bagsData?.filter(b => b.bag_type === 'recyclable' || b.qr_code?.startsWith('WWR')) || [];
-    const biodegradableBags = bagsData?.filter(b => b.bag_type === 'biodegradable' || b.bag_type === 'organic' || b.qr_code?.startsWith('WWO')) || [];
-    const residualBags = bagsData?.filter(b => b.bag_type === 'residual' || b.qr_code?.startsWith('WWS')) || [];
+    const recyclableBags = bagsData?.filter(b => b.bag_type === 'recyclable' || b.qr_code?.startsWith('TTR')) || [];
+    const biodegradableBags = bagsData?.filter(b => b.bag_type === 'biodegradable' || b.bag_type === 'organic' || b.qr_code?.startsWith('TTO')) || [];
+    const residualBags = bagsData?.filter(b => b.bag_type === 'residual' || b.qr_code?.startsWith('TTS')) || [];
 
     // Weight breakdown by bag type
     const recyclableBagIds = new Set(recyclableBags.map(b => b.id));
@@ -374,8 +374,8 @@ export default function AdminDashboardPage() {
     
     bagsData?.slice(-10).forEach(bag => {
       let bagTypeName = 'Recyclable';
-      if (bag.qr_code?.startsWith('WWO') || bag.bag_type === 'organic' || bag.bag_type === 'biodegradable') bagTypeName = 'Biodegradable';
-      else if (bag.qr_code?.startsWith('WWS') || bag.bag_type === 'residual') bagTypeName = 'Residual';
+      if (bag.qr_code?.startsWith('TTO') || bag.bag_type === 'organic' || bag.bag_type === 'biodegradable') bagTypeName = 'Biodegradable';
+      else if (bag.qr_code?.startsWith('TTS') || bag.bag_type === 'residual') bagTypeName = 'Residual';
       activities.push({
         id: `bag-${bag.id}`,
         type: 'bag_activated',
