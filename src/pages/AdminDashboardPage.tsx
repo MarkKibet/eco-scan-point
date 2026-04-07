@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import UserActivitySheet from '@/components/UserActivitySheet';
+import { AdminEditButton, AdminDeleteButton } from '@/components/AdminUserManagement';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
@@ -944,7 +945,7 @@ export default function AdminDashboardPage() {
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader>
+                     <TableHeader>
                       <TableRow>
                         <TableHead>Household ID</TableHead>
                         <TableHead>Name</TableHead>
@@ -952,6 +953,7 @@ export default function AdminDashboardPage() {
                         <TableHead>Location</TableHead>
                         <TableHead>Points</TableHead>
                         <TableHead>Joined</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -972,6 +974,12 @@ export default function AdminDashboardPage() {
                           <TableCell className="flex items-center gap-2">
                             {new Date(user.created_at).toLocaleDateString()}
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <AdminEditButton user={user} onUpdated={fetchDashboardData} />
+                              <AdminDeleteButton user={user} onUpdated={fetchDashboardData} />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1003,6 +1011,7 @@ export default function AdminDashboardPage() {
                         <TableHead>Phone</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Joined</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1018,9 +1027,14 @@ export default function AdminDashboardPage() {
                           <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                           <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>
-                          <TableCell className="flex items-center gap-2">
+                          <TableCell>
                             {new Date(user.created_at).toLocaleDateString()}
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <AdminEditButton user={user} onUpdated={fetchDashboardData} />
+                              <AdminDeleteButton user={user} onUpdated={fetchDashboardData} />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1045,26 +1059,38 @@ export default function AdminDashboardPage() {
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                         <TableRow>
                           <TableHead>Name</TableHead>
                           <TableHead>Verifications</TableHead>
                           <TableHead>Approved</TableHead>
                           <TableHead>Rejected</TableHead>
+                          <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {receiverStats.length > 0 ? (
-                          receiverStats.map(receiver => (
+                         receiverStats.map(receiver => {
+                            const receiverUser = users.find(u => u.id === receiver.id);
+                            return (
                             <TableRow key={receiver.id}>
                               <TableCell className="font-medium">{receiver.name}</TableCell>
                               <TableCell>{receiver.totalVerifications}</TableCell>
                               <TableCell className="text-emerald-600">{receiver.approved}</TableCell>
                               <TableCell className="text-red-600">{receiver.disapproved}</TableCell>
+                              <TableCell>
+                                {receiverUser && (
+                                  <div className="flex items-center gap-1">
+                                    <AdminEditButton user={receiverUser} onUpdated={fetchDashboardData} />
+                                    <AdminDeleteButton user={receiverUser} onUpdated={fetchDashboardData} />
+                                  </div>
+                                )}
+                              </TableCell>
                             </TableRow>
-                          ))
+                            );
+                          })
                         ) : (
                           <TableRow>
-                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                               No receiver activity yet
                             </TableCell>
                           </TableRow>
