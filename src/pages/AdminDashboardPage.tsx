@@ -1069,14 +1069,25 @@ export default function AdminDashboardPage() {
                       </TableHeader>
                       <TableBody>
                         {receiverStats.length > 0 ? (
-                          receiverStats.map(receiver => (
+                         receiverStats.map(receiver => {
+                            const receiverUser = users.find(u => u.id === receiver.id);
+                            return (
                             <TableRow key={receiver.id}>
                               <TableCell className="font-medium">{receiver.name}</TableCell>
                               <TableCell>{receiver.totalVerifications}</TableCell>
                               <TableCell className="text-emerald-600">{receiver.approved}</TableCell>
                               <TableCell className="text-red-600">{receiver.disapproved}</TableCell>
+                              <TableCell>
+                                {receiverUser && (
+                                  <div className="flex items-center gap-1">
+                                    <AdminEditButton user={receiverUser} onUpdated={fetchDashboardData} />
+                                    <AdminDeleteButton user={receiverUser} onUpdated={fetchDashboardData} />
+                                  </div>
+                                )}
+                              </TableCell>
                             </TableRow>
-                          ))
+                            );
+                          })
                         ) : (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
