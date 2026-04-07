@@ -1011,6 +1011,7 @@ export default function AdminDashboardPage() {
                         <TableHead>Phone</TableHead>
                         <TableHead>Location</TableHead>
                         <TableHead>Joined</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1026,9 +1027,14 @@ export default function AdminDashboardPage() {
                           <TableCell className="font-medium">{user.name || 'N/A'}</TableCell>
                           <TableCell>{user.phone || 'N/A'}</TableCell>
                           <TableCell>{user.location || 'N/A'}</TableCell>
-                          <TableCell className="flex items-center gap-2">
+                          <TableCell>
                             {new Date(user.created_at).toLocaleDateString()}
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <AdminEditButton user={user} onUpdated={fetchDashboardData} />
+                              <AdminDeleteButton user={user} onUpdated={fetchDashboardData} />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
