@@ -945,7 +945,7 @@ export default function AdminDashboardPage() {
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader>
+                     <TableHeader>
                       <TableRow>
                         <TableHead>Household ID</TableHead>
                         <TableHead>Name</TableHead>
@@ -953,6 +953,7 @@ export default function AdminDashboardPage() {
                         <TableHead>Location</TableHead>
                         <TableHead>Points</TableHead>
                         <TableHead>Joined</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -973,6 +974,12 @@ export default function AdminDashboardPage() {
                           <TableCell className="flex items-center gap-2">
                             {new Date(user.created_at).toLocaleDateString()}
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <AdminEditButton user={user} onUpdated={fetchDashboardData} />
+                              <AdminDeleteButton user={user} onUpdated={fetchDashboardData} />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
