@@ -185,10 +185,10 @@ export default function ScanPage() {
     // Determine bag type and points from QR code prefix
     let bagType = 'recyclable';
     let pointsValue = 15;
-    if (code.startsWith('WWO')) {
+    if (code.startsWith('TTO')) {
       bagType = 'biodegradable';
       pointsValue = 5;
-    } else if (code.startsWith('WWS')) {
+    } else if (code.startsWith('TTS')) {
       bagType = 'residual';
       pointsValue = 1;
     }
@@ -372,11 +372,11 @@ export default function ScanPage() {
     // Determine points based on bag type from QR code prefix
     let pointsAwarded = 0;
     if (approved) {
-      if (bagDetails.qr_code.startsWith('WWR')) {
+      if (bagDetails.qr_code.startsWith('TTR')) {
         pointsAwarded = 15;
-      } else if (bagDetails.qr_code.startsWith('WWO')) {
+      } else if (bagDetails.qr_code.startsWith('TTO')) {
         pointsAwarded = 5;
-      } else if (bagDetails.qr_code.startsWith('WWS')) {
+      } else if (bagDetails.qr_code.startsWith('TTS')) {
         pointsAwarded = 1;
       }
     }
