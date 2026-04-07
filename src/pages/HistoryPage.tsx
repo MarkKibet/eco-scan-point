@@ -103,14 +103,14 @@ export default function HistoryPage() {
   };
 
   const getBagTypeInfo = (qrCode: string) => {
-    if (qrCode.startsWith('WWR')) {
+    if (qrCode.startsWith('TTR')) {
       return { type: 'Recyclable', color: 'bg-blue-600', textColor: 'text-blue-600', icon: Leaf, points: 15 };
-    } else if (qrCode.startsWith('WWO')) {
+    } else if (qrCode.startsWith('TTO')) {
       return { type: 'Biodegradable', color: 'bg-green-600', textColor: 'text-green-600', icon: Trash2, points: 5 };
-    } else if (qrCode.startsWith('WWS')) {
-      return { type: 'Residual', color: 'bg-destructive', textColor: 'text-destructive', icon: AlertTriangle, points: 1 };
+    } else if (qrCode.startsWith('TTS')) {
+      return { type: 'Residual', color: 'bg-gray-900 dark:bg-gray-500', textColor: 'text-gray-900 dark:text-gray-300', icon: Trash2, points: 1 };
     }
-    return { type: 'Unknown', color: 'bg-muted', textColor: 'text-muted-foreground', icon: Package, points: 0 };
+    return { type: 'Recyclable', color: 'bg-blue-600', textColor: 'text-blue-600', icon: Package, points: 15 };
   };
 
   if (loading) {
