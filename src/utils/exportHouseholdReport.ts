@@ -53,7 +53,7 @@ function headerCell(text: string, width: number): TableCell {
   });
 }
 
-function dataCell(text: string, width: number, isAlt = false, align = AlignmentType.LEFT): TableCell {
+function dataCell(text: string, width: number, isAlt = false, align: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT): TableCell {
   return new TableCell({
     borders: cellBorders,
     width: { size: width, type: WidthType.DXA },
