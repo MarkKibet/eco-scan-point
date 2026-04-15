@@ -34,6 +34,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import UserActivitySheet from '@/components/UserActivitySheet';
 import { AdminEditButton, AdminDeleteButton } from '@/components/AdminUserManagement';
+import { exportHouseholdReport } from '@/utils/exportHouseholdReport';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
@@ -937,10 +938,12 @@ export default function AdminDashboardPage() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-sm">Households ({users.filter(u => u.role === 'household').length})</CardTitle>
-                <Button variant="outline" size="sm" onClick={() => exportData('users')}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => exportHouseholdReport()}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Report
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
